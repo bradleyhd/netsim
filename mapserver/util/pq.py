@@ -1,5 +1,5 @@
-from heapq import heappush, heappop
-import itertools
+from heapq import heappush, heappop, nsmallest
+import itertools, sys
 
 class PriorityQueue(object):
 
@@ -23,6 +23,32 @@ class PriorityQueue(object):
     def _remove_node(self, node):
         entry = self.entry_finder.pop(node)
         entry[-1] = self.REMOVED
+
+    def not_empty(self):
+
+        while True:
+            
+            entries = nsmallest(1, self.pq)
+            if not entries:
+                return False
+
+            if entries[0][2] == self.REMOVED:
+                heappop(self.pq)
+                continue
+
+            return True
+
+    def min_val(self):
+
+        if self.not_empty():
+
+            entries = nsmallest(1, self.pq)
+            priority, count, node = entries[0]
+            return priority
+
+        else:
+
+            return sys.maxsize
 
     def pop(self):
         while self.pq:

@@ -83,3 +83,4 @@ celerybeat-schedule
 *.txt
 *.pdf
 *.csv
+/data

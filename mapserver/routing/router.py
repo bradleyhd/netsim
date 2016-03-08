@@ -1,6 +1,7 @@
 import logging
-from mapserver.util.heap import FastUpdateBinaryHeap
 import math, random
+
+from mapserver.util.pq import PriorityQueue
 
 class Router():
 
@@ -11,10 +12,6 @@ class Router():
         
         self.G = G
         self.weight_label = weight_label
-        self.num_nodes = max(self.G.node, key=int)
-        init_cap = int(self.num_nodes / 8)
-        self._forward_pq = FastUpdateBinaryHeap(init_cap, self.num_nodes)
-        self._backward_pq = FastUpdateBinaryHeap(init_cap, self.num_nodes)
 
         self.short_path = []
         self.touch_path_fwd = []
@@ -94,8 +91,8 @@ class Router():
         r = 1
 
         # reset queues
-        self._forward_pq.reset()
-        self._backward_pq.reset()
+        self._forward_pq = PriorityQueue()
+        self._backward_pq = PriorityQueue()
 
         # set up queues
         qs = [self._forward_pq, self._backward_pq]
@@ -122,17 +119,20 @@ class Router():
         stalled_count = 0
 
         # while the queues are not empty
-        while qs[0].count or qs[1].count:
+        while qs[0].not_empty() or qs[1].not_empty():
 
             # if the smallest cost to node in either queue is bigger than the
             # shortest path distance, we can halt
             if best_dist <= min(qs[0].min_val(), qs[1].min_val()): break
 
             # if the other queue is not empty, switch directions
-            if qs[1 - r].count: r = 1 - r
+            if qs[1 - r].not_empty(): r = 1 - r
 
             # pop the minimum node
-            dist_to_u, u = qs[r].pop()
+            try:
+                dist_to_u, u = qs[r].pop()
+            except KeyError as e:
+                break
 
             # if node has been settled by both searches
             if u in source[1 - r]:

@@ -16,4 +16,4 @@ class MapDownloader(object):
         with urlopen(url) as response, open(file_path, 'wb') as out_file:
             copyfileobj(response, out_file)
 
-        self.__log.info('Download complete, saved at %s' % file_path)
+        self.__log.info('Download complete, saved as %s' % file_path)

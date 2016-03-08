@@ -1,4 +1,3 @@
-from mapserver.util.heap import FastUpdateBinaryHeap
 from mapserver.util.pq import PriorityQueue
 from mapserver.util.timer import Timer
 import itertools, logging, sys
@@ -194,17 +193,17 @@ class GraphContractor(object):
         timer.stop()
         self.__log.info('%d nodes, %.10f ms/node' % (self.num_nodes, timer.elapsed / self.num_nodes))
 
-    def re_order_nodes(self):
+    # def re_order_nodes(self):
 
-        pq_copy = FastUpdateBinaryHeap(self.num_nodes, self.num_nodes + 1)
+    #     pq_copy = FastUpdateBinaryHeap(self.num_nodes, self.num_nodes + 1)
 
-        while self._node_priority_pq.count:
+    #     while self._node_priority_pq.count:
 
-            _, v = self._node_priority_pq.pop()
-            priority = self._calc_node_priority(v)
-            pq_copy.push(priority, v)
+    #         _, v = self._node_priority_pq.pop()
+    #         priority = self._calc_node_priority(v)
+    #         pq_copy.push(priority, v)
 
-        self._node_priority_pq = pq_copy
+    #     self._node_priority_pq = pq_copy
 
     def __complete_early_contraction(self, count):
 
