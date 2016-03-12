@@ -2,10 +2,11 @@ import logging
 import math, random
 
 from mapserver.util.pq import PriorityQueue
+from mapserver.util.timer import Timer
 
 class Router():
 
-    def __init__(self, G, weight_label = 'ttt'):
+    def __init__(self, G, weight_label='ttt', decision_map=None):
 
         super().__init__()
         self.__log = logging.getLogger(__name__)
@@ -16,17 +17,18 @@ class Router():
         self.short_path = []
         self.touch_path_fwd = []
         self.touch_path_bwd = []
+        self.decision_map = decision_map
         self.exact = True
         self.opt = 0
 
     def route(self, start_node, end_node):
 
-        #self._timer_begin()
+        timer = Timer(__name__, 'debug')
+        timer.start('Routing %s->%s' % (start_node, end_node))
 
         path = self._bidirectional_dijkstra(start_node, end_node)
-        #self._timer_end()
-
-        #path = id(self)
+        
+        timer.stop()
 
         return path
 
@@ -183,7 +185,7 @@ class Router():
                     # if v is stalled, unstall it
                     if v in stalled[r]: del stalled[r][v]
 
-        if not best_node: return []
+        if best_node is None: return []
 
         if not self.exact:
             choices = []
@@ -212,7 +214,16 @@ class Router():
         #     nrd = self.G[x1][y1].get('name', '?')
         #     print('%d %d: %s->%s' % (x, y, rd, nrd))
 
-        # print('---')
+        if self.decision_map:
+            tmp_route = []
+
+            for x, y in route:
+                if (x, y) in self.decision_map:
+                    tmp_route.extend(self.decision_map[(x, y)])
+                else:
+                    tmp_route.extend([(x, y)])
+
+            return tmp_route
 
         return route
 

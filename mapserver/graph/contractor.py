@@ -34,10 +34,18 @@ class GraphContractor(object):
     def _successors(self, x, simulated=False):
 
         if simulated:
-            return ((y, data) for y, data in iter(self.G.edge[x].items()) if not self.G.node[y]['priority'] < sys.maxsize)
+            return ((y, data) for y, data in iter(self.G.succ[x].items()) if not self.G.node[y]['priority'] < sys.maxsize)
         else:
             x_pri = self.G.node[x]['priority']
-            return ((y, data) for y, data in iter(self.G.edge[x].items()) if self.G.node[y]['priority'] > x_pri)
+            return ((y, data) for y, data in iter(self.G.succ[x].items()) if self.G.node[y]['priority'] > x_pri)
+
+    def _predecessors(self, y, simulated=False):
+
+        if simulated:
+            return ((x, data) for x, data in iter(self.G.pred[y].items()) if not self.G.node[x]['priority'] < sys.maxsize)
+        else:
+            y_pri = self.G.node[y]['priority']
+            return ((x, data) for x, data in iter(self.G.pred[y].items()) if self.G.node[x]['priority'] > y_pri)
 
     # searches for shortest paths from start_node to each of the target_nodes
     # while excluding the ignore_node
@@ -126,21 +134,17 @@ class GraphContractor(object):
         return (len(cost_and_predecessor), sp_ends)
 
     #@profile
-    def _calc_node_priority(self, v):
+    def _calc_node_priority(self, v, simulated=True):
 
         total_search_size = 0
         total_num_shortcuts = 0
 
-        # for each predecessor of v
-        # do a local search to all successors of v
-        # there's no need to check the priority of the successors/predecessors
-        # because either it doesn't matter or the calling method does it first
-        for u, u_edge in iter(self.G.pred[v].items()):
+        for u, u_edge in self._predecessors(v, simulated):
 
             w_nodes = []
             uvw_costs = []
 
-            for w, w_edge in iter(self.G.succ[v].items()):
+            for w, w_edge in self._successors(v, simulated):
 
                 if w == u:
                     continue
@@ -315,8 +319,8 @@ class GraphContractor(object):
         # reset updates queue
         self.updates = {}
 
-    # @profile
-    def contract_graph(self, firstRun=True):
+    #@profile
+    def contract_graph(self, simulated=True):
 
         timer = Timer(__name__)
         timer.start('Contracting graph...')
@@ -330,13 +334,11 @@ class GraphContractor(object):
             except KeyError as e:
                 break
 
-            if firstRun:
+            if simulated:
                 self.G.node[v]['priority'] = count
                 v_priority = count
 
-            #print('popped node %s - %d' % (v, v_priority))
-
-            if count % 50 == 0:
+            if count % 10 == 0:
                 print('\r%.4f%%' % ((count / self.num_nodes) * 100), end = '')
 
             #if count % 1000 == 0:
@@ -344,43 +346,17 @@ class GraphContractor(object):
 
             neighbors = set()
             count += 1
-            v_ct = 0
 
-            #print('---NODE---')
-            #print('%d with priority %d' % (v, self.G.node[v]['priority']))
-
-            # for each predecessor of v to each successor v
-            for u, u_edge in self.G.pred[v].items():
-
-                # if the predecessor edge is not of a higher priority, skip it
-                if firstRun and self.G.node[u]['priority'] != sys.maxsize:
-                    continue
-
-                if (not firstRun) and self.G.node[u]['priority'] <= v_priority:
-                    continue
+            for u, u_edge in self._predecessors(v, simulated):
 
                 neighbors.add(u)
                 w_nodes = []
                 uvw_costs = []
 
-                #print('pred %d with priority %d' % (u, self.G.node[u]['priority']))
-
-                for w, w_edge in self.G.succ[v].items():
+                for w, w_edge in self._successors(v, simulated):
 
                     if u == w:
                         continue
-
-                    # if the succssor edge is not of a higher priority, skip it
-                    if firstRun and self.G.node[w]['priority'] != sys.maxsize:
-                        continue
-                    
-                    if (not firstRun) and self.G.node[w]['priority'] <= v_priority:
-                        continue
-
-                    #print('succ %d with priority %d' % (w, self.G.node[w]['priority']))
-
-                    #print('%d->%d %s' % (u, v, u_edge['is_shortcut']))
-                    #print('%d->%d %s' % (v, w, w_edge['is_shortcut']))
 
                     neighbors.add(w)
                     w_nodes.append(w)
@@ -389,10 +365,8 @@ class GraphContractor(object):
                 # if there are successors (which make a complete uvw path)
                 if w_nodes:
 
-                    v_ct += len(w_nodes)
-
                     # local search to get which paths need shortcuts
-                    _, ends = self._local_search(u, v, w_nodes, uvw_costs, firstRun, False)
+                    _, ends = self._local_search(u, v, w_nodes, uvw_costs, simulated)
 
                     # for each path add a shortcut
                     for end in ends:
@@ -405,23 +379,20 @@ class GraphContractor(object):
                             'repl_node': v,
                         }
 
-                        #print('adding %s->%s (%s)' % (u, end, weight))
                         self.G.add_edge(u, end, **tags)
 
-            # update counts of neighbors
-            # only neighbors in the remaining graph were added, so no explicit
-            # check needed
-            #print('updating %s neighbors' % len(neighbors))
-            if firstRun:
+            if simulated:
+                
                 for n in neighbors:
 
                     self.G.node[n]['adj_count'] += 1
-                    new_priority = self._calc_node_priority(n)
+                    new_priority = self._calc_node_priority(n, simulated)
                     self._node_priority_pq.push(new_priority, n)
 
             #print('node: %d, inspecting %d' % (v, v_ct))
 
         print('\r%.4f%%' % 100)
+        self.__log.info('Nodes: %s Edges: %s' % ('{:,}'.format(self.G.number_of_nodes()), '{:,}'.format(self.G.number_of_edges())))
         timer.stop()
 
     def set_flags(self):
