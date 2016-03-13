@@ -11,7 +11,7 @@ class GraphBuilder(object):
 
     __tags_to_copy = ['name', 'oneway', 'lanes', 'highway']
 
-    def __init__(self, config):
+    def __init__(self, config, tier=None):
 
         self.__log = logging.getLogger(__name__)
 
@@ -25,6 +25,13 @@ class GraphBuilder(object):
         self.__nodes_counter = itertools.count()
         self.__nodes_seen = {}
         self.__current_item = None
+
+        self.__tier = tier
+        self.__tiers = {
+            1: ['motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary', 'secondary_link'],
+            2: ['tertiary', 'tertiary_link', 'road'],
+            3: ['residential']
+        }
 
         self.graph = nx.DiGraph()
 
@@ -97,8 +104,11 @@ class GraphBuilder(object):
             self.graph.add_node(self.__current_item.attrs['id'], **self.__current_item.attrs)
 
         # if it's the end of a way and if it's a road
-        elif name == 'way' and isinstance(self.__current_item, Way) and 'highway' in self.__current_item.attrs and self.__current_item.attrs['highway'] in self._road_parameters: #in ['motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary', 'secondary_link']:
+        elif name == 'way' and isinstance(self.__current_item, Way) and 'highway' in self.__current_item.attrs:
 
+            # if a tier is chosen and way is in the correct tier
+            # or if no tier is chosen and way is in the list of all road types
+            if (self.__tier is not None and self.__current_item.attrs['highway'] in self.__tiers[self.__tier]) or (self.__tier is None and self.__current_item.attrs['highway'] in self._road_parameters):
                 props = self.__current_item.attrs
 
                 # figure out if we should add a reversed path

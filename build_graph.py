@@ -21,7 +21,7 @@ with open('config.json', 'r') as file:
 data_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + args.data_file + '.osm'
 
 # build the graph
-factory = GraphBuilder(config)
+factory = GraphBuilder(config, tier=None)
 graph = factory.from_file(data_file_path, True)
 
 # factory2 = GraphBuilder(config)

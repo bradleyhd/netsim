@@ -23,11 +23,11 @@ with open('config.json', 'r') as file:
 data_file_path = 'data/%s.osm' % args.data_file
 
 # build the graph
-factory = GraphBuilder(config)
+factory = GraphBuilder(config, tier=1)
 G = factory.from_file(data_file_path, True)
 sim_data = factory.get_sim_data(True)
 
-factory2 = GraphBuilder(config)
+factory2 = GraphBuilder(config, tier=1)
 H = factory2.from_file(data_file_path)
 
 # contract the graph
@@ -46,8 +46,8 @@ for x in range(0, int(args.trips)):
 
     (start_node, end_node) = random.sample(list(G.nodes()), 2)
     #midgso
-    start_node = 23638
-    end_node = 23570
+    # start_node = 23638
+    # end_node = 23570
 
     try:
         check_path = nx.shortest_path(H,source = start_node,target = end_node, weight='ttt')
@@ -58,6 +58,18 @@ for x in range(0, int(args.trips)):
     path = router.route(start_node, end_node)
 
     if path != check_path:
+
+        path_length = 0
+        for x, y in path:
+            path_length += G[x][y]['ttt']
+
+        check_path_length = 0
+        for x, y in check_path:
+            check_path_length += H[x][y]['ttt']
+
+        if path_length === check_path_length:
+            continue
+        
         count += 1
         print('Error, disagreement:')
         print('Contracted: %s' % path)
