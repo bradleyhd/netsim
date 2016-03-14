@@ -27,11 +27,11 @@ with open('config.json', 'r') as file:
 data_file_path = 'data/%s.osm' % args.data_file
 
 # build the graph
-factory = GraphBuilder(config, tier=1)
+factory = GraphBuilder(config)
 G = factory.from_file(data_file_path, True)
 sim_data = factory.get_sim_data(True)
 
-factory2 = GraphBuilder(config, tier=1)
+factory2 = GraphBuilder(config)
 H = factory2.from_file(data_file_path)
 
 # contract the graph
@@ -48,6 +48,7 @@ path = []
 
 for x in range(0, int(args.trips)):
 
+    print(x)
     (start_node, end_node) = random.sample(list(G.nodes()), 2)
     #midgso
     # start_node = 23638
@@ -120,8 +121,8 @@ edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = [(x, y) for x,
 edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = path, edge_color = 'c', width = 0.05, alpha = 0.75, arrows = True)
 edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = check_path, edge_color = 'g', width = 0.05, alpha = 0.75, arrows = True)
 props = dict(facecolor='none',edgecolor='none',boxstyle='round')
-nx.draw_networkx_edge_labels(G, pos=positions, edge_labels = labels, font_size=0.25, font_color='w', bbox=props)
-nx.draw_networkx_edge_labels(H, pos=positions, edge_labels = h_labels, font_size=0.25, font_color='w', bbox=props)
+# nx.draw_networkx_edge_labels(G, pos=positions, edge_labels = labels, font_size=0.25, font_color='w', bbox=props)
+# nx.draw_networkx_edge_labels(H, pos=positions, edge_labels = h_labels, font_size=0.25, font_color='w', bbox=props)
 
 
 plt.axis('on')
