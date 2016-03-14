@@ -66,7 +66,7 @@ for x in range(0, int(args.trips)):
 
         path_length = 0
         for x, y in path:
-            path_length += G[x][y]['ttt']
+            path_length += H[x][y]['ttt']
 
         check_path_length = 0
         for x, y in check_path:
@@ -112,21 +112,21 @@ for x, y, data in H.edges(data = True):
 #   if 'decision_node' in d:
 #     decision_nodes.append(n)
 
-nx.draw_networkx_nodes(G, pos = positions, nodelist = G.nodes(), node_color = 'c', linewidths = 0, node_size = 0.05, node_shape = 'o')
-edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = H.edges(), edge_color = 'w', width = 0.05, alpha = 1.0, arrows = True)
-edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = [(x, y) for x, y, d in G.edges(data=True) if not d['is_shortcut']], edge_color = 'y', width = 0.05, alpha = 1.0, arrows = True)
-# edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = [(x, y) for x, y in G.edges() if 'up' in G[x][y]], edge_color = 'r', width = 0.05, alpha = 0.5, arrows = True)
-# edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = [(x, y) for x, y in G.edges() if 'down' in G[x][y]], edge_color = 'b', width = 0.05, alpha = 0.5, arrows = True)
+# nx.draw_networkx_nodes(G, pos = positions, nodelist = G.nodes(), node_color = 'c', linewidths = 0, node_size = 0.05, node_shape = 'o')
+# edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = H.edges(), edge_color = 'w', width = 0.05, alpha = 1.0, arrows = True)
+# edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = [(x, y) for x, y, d in G.edges(data=True) if not d['is_shortcut']], edge_color = 'y', width = 0.05, alpha = 1.0, arrows = True)
+# # edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = [(x, y) for x, y in G.edges() if 'up' in G[x][y]], edge_color = 'r', width = 0.05, alpha = 0.5, arrows = True)
+# # edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = [(x, y) for x, y in G.edges() if 'down' in G[x][y]], edge_color = 'b', width = 0.05, alpha = 0.5, arrows = True)
 
-edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = path, edge_color = 'c', width = 0.05, alpha = 0.75, arrows = True)
-edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = check_path, edge_color = 'g', width = 0.05, alpha = 0.75, arrows = True)
-props = dict(facecolor='none',edgecolor='none',boxstyle='round')
-# nx.draw_networkx_edge_labels(G, pos=positions, edge_labels = labels, font_size=0.25, font_color='w', bbox=props)
-# nx.draw_networkx_edge_labels(H, pos=positions, edge_labels = h_labels, font_size=0.25, font_color='w', bbox=props)
+# edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = path, edge_color = 'c', width = 0.05, alpha = 0.75, arrows = True)
+# edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = check_path, edge_color = 'g', width = 0.05, alpha = 0.75, arrows = True)
+# props = dict(facecolor='none',edgecolor='none',boxstyle='round')
+# # nx.draw_networkx_edge_labels(G, pos=positions, edge_labels = labels, font_size=0.25, font_color='w', bbox=props)
+# # nx.draw_networkx_edge_labels(H, pos=positions, edge_labels = h_labels, font_size=0.25, font_color='w', bbox=props)
 
 
-plt.axis('on')
-plt.axes().set_aspect('equal', 'datalim')
-plt.axes().set_axis_bgcolor('black')
+# plt.axis('on')
+# plt.axes().set_aspect('equal', 'datalim')
+# plt.axes().set_axis_bgcolor('black')
 
-plt.savefig('test.pdf')
+# plt.savefig('test.pdf')
