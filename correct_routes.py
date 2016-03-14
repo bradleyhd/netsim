@@ -67,9 +67,9 @@ for x in range(0, int(args.trips)):
         for x, y in check_path:
             check_path_length += H[x][y]['ttt']
 
-        if path_length === check_path_length:
+        if path_length == check_path_length:
             continue
-        
+
         count += 1
         print('Error, disagreement:')
         print('Contracted: %s' % path)
