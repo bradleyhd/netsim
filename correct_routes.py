@@ -6,6 +6,10 @@ from mapserver.graph.contractor import GraphContractor
 from networkx.readwrite import json_graph
 from mapserver.routing.router import Router
 
+import matplotlib
+# Force matplotlib to not use any Xwindows backend.
+matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 
 
