@@ -28,8 +28,8 @@ class GraphBuilder(object):
 
         self.__tier = tier
         self.__tiers = {
-            1: ['motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary', 'secondary_link'],
-            2: ['tertiary', 'tertiary_link', 'road'],
+            1: ['motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link'],
+            2: ['secondary', 'secondary_link', 'tertiary', 'tertiary_link', 'road'],
             3: ['residential']
         }
 
@@ -45,7 +45,7 @@ class GraphBuilder(object):
             id = next(self.__nodes_counter)
 
             # create node object
-            n = Node(id, attrs['id'], float(attrs['lon']), float(attrs['lat']), default_attrs = self._default_node_attrs.copy())
+            n = Node(attrs['id'], attrs['id'], float(attrs['lon']), float(attrs['lat']), default_attrs = self._default_node_attrs.copy())
 
             # record it as the current item
             self.__current_item = n
@@ -188,7 +188,7 @@ class GraphBuilder(object):
 
             self.decision_graph = self.__decision_graph()
 
-             # remove orphan nodes
+            # remove orphan nodes
             solitary = [n for n, d in self.decision_graph.degree_iter() if d == 0]
             self.decision_graph.remove_nodes_from(solitary)
 

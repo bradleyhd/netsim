@@ -1,15 +1,12 @@
-import argparse, json, pickle
-import os.path
-import networkx as nx
-
-from mapserver.graph.builder import GraphBuilder
-from mapserver.graph.contractor import GraphContractor
-from networkx.readwrite import json_graph
-
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import json, argparse, os
+from networkx.readwrite import json_graph
+import networkx as nx
+from mapserver.graph.contractor import GraphContractor
 
-parser = argparse.ArgumentParser(description='Constructs and contracts a graph.')
-parser.add_argument('data_file', help='the name of the data file')
+parser = argparse.ArgumentParser(description='Draws a graph in 3d.')
+parser.add_argument('data_file', help='the name of the graph file')
 parser.add_argument('--saveas', help='the name of the output file')
 
 args = parser.parse_args()
@@ -18,39 +15,48 @@ config = {}
 with open('config.json', 'r') as file:
     config = json.load(file)
 
-data_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + args.data_file + '.osm'
+with open('data/' + args.data_file + '_1.graph', 'r') as file:
+      
+    data = json.load(file)
+    graph = json_graph.node_link_graph(data)
 
-# build the graph
-factory = GraphBuilder(config, tier=None)
-graph = factory.from_file(data_file_path)
+with open('data/' + args.data_file + '_2.graph', 'r') as file:
+      
+    data = json.load(file)
+    graph_2 = json_graph.node_link_graph(data)
 
-# factory2 = GraphBuilder(config)
-# H = factory2.from_file(data_file_path, True)
+with open('data/' + args.data_file + '_3.graph', 'r') as file:
+      
+    data = json.load(file)
+    graph_3 = json_graph.node_link_graph(data)
 
-#sim_data = factory.get_sim_data(True)
 
-# contract the graph
+num_nodes_23 = graph_2.number_of_nodes() + graph_3.number_of_nodes()
+num_nodes_2 = graph_2.number_of_nodes()
+
+for n, d in graph.nodes(data=True):
+  d['priority'] += num_nodes_23
+
+for n, d in graph_2.nodes(data=True):
+  d['priority'] += num_nodes_2
+
+for x, y, d in graph_2.edges(data=True):
+  graph.add_edge(x, y, **d)
+
+for x, y, d in graph_3.edges(data=True):
+  graph.add_edge(x, y, **d)
+
 C = GraphContractor(config, graph)
-C.order_nodes()
-C.contract_graph()
 C.set_flags()
 
 # write graph to file
-out_file_name = args.saveas + '.graph' if args.saveas else args.data_file + '.graph'
+out_file_name = args.saveas + '_merged.graph' if args.saveas else args.data_file + '_merged.graph'
 out_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + out_file_name
 
 f = open(out_file_path, 'w')
 data = json_graph.node_link_data(graph)
 f.write(json.dumps(data))
 f.close()
-
-# write sim data to file
-# out_file_name = args.saveas + '.sim' if args.saveas else args.data_file + '.sim'
-# out_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + out_file_name
-
-# f = open(out_file_path, 'wb')
-# f.write(pickle.dumps(sim_data))
-# f.close()
 
 # nodes = []
 # priorities = {}

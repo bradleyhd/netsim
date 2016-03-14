@@ -1,5 +1,6 @@
 from mapserver.util.pq import PriorityQueue
 from mapserver.util.timer import Timer
+
 import itertools, logging, sys
 import networkx as nx
 
@@ -31,17 +32,17 @@ class GraphContractor(object):
         path.reverse()
         return path
 
-    def _successors(self, x, simulated=False):
+    def _successors(self, x, initialize=False):
 
-        if simulated:
+        if initialize:
             return ((y, data) for y, data in iter(self.G.succ[x].items()) if not self.G.node[y]['priority'] < sys.maxsize)
         else:
             x_pri = self.G.node[x]['priority']
             return ((y, data) for y, data in iter(self.G.succ[x].items()) if self.G.node[y]['priority'] > x_pri)
 
-    def _predecessors(self, y, simulated=False):
+    def _predecessors(self, y, initialize=False):
 
-        if simulated:
+        if initialize:
             return ((x, data) for x, data in iter(self.G.pred[y].items()) if not self.G.node[x]['priority'] < sys.maxsize)
         else:
             y_pri = self.G.node[y]['priority']
@@ -55,7 +56,7 @@ class GraphContractor(object):
     # ignore node MUST have a priority set
 
     #@profile
-    def _local_search(self, start_node, ignore_node, end_nodes, direct_costs, simulated=True, log=False):
+    def _local_search(self, start_node, ignore_node, end_nodes, direct_costs, initialize=True, log=False):
 
         self._local_search_pq = PriorityQueue()
 
@@ -89,7 +90,7 @@ class GraphContractor(object):
             if set(end_nodes) <= cost_and_predecessor.keys():
                 break
 
-            for neighbor_node, edge_tags in self._successors(current_node, simulated):
+            for neighbor_node, edge_tags in self._successors(current_node, initialize):
 
                 # compute the tentative cost to the current neighbor
                 new_cost = current_cost + edge_tags[self.__weight_label]
@@ -127,34 +128,38 @@ class GraphContractor(object):
                 # on the fly edge reduction
                 # if the shortest path found isn't shorter than the direct costs
                 # and yet theres' a direct edge, delete the edge
-                if not simulated and end_node in self.G[start_node]:
-                    self.G.remove_edge(start_node, end_node)
+                # if end_node in self.G[start_node]:
+                #     self.G.remove_edge(start_node, end_node)
 
         # return the size of the search space and the terminuses of needed shortcuts
         return (len(cost_and_predecessor), sp_ends)
 
     #@profile
-    def _calc_node_priority(self, v, simulated=True):
+    def _calc_node_priority(self, v, initialize=True):
 
         total_search_size = 0
         total_num_shortcuts = 0
+        neighbors = set()
 
-        for u, u_edge in self._predecessors(v, simulated):
+        for u, u_edge in self._predecessors(v, initialize):
 
+            neighbors.add(u)
             w_nodes = []
             uvw_costs = []
 
-            for w, w_edge in self._successors(v, simulated):
+            for w, w_edge in self._successors(v, initialize):
 
                 if w == u:
                     continue
+
+                neighbors.add(w)
 
                 w_nodes.append(w)
                 uvw_costs.append(u_edge[self.__weight_label] + w_edge[self.__weight_label])
 
             # if there are any successors
             if w_nodes:
-                search_size, sp_ends = self._local_search(u, v, w_nodes, uvw_costs)
+                search_size, sp_ends = self._local_search(u, v, w_nodes, uvw_costs, initialize)
                 total_search_size += search_size
                 total_num_shortcuts += len(sp_ends)
 
@@ -162,16 +167,17 @@ class GraphContractor(object):
         # if n is in the remaining graph or if v doesn't have a priority
         # then everything is above it in the ordering
 
-        v_priority = self.G.node[v]['priority']
+        #v_priority = self.G.node[v]['priority']
 
         # v will not be ranked whenever nodes are first ordered
         # v will be ranked on any recalculation of priority
-        v_has_priority = (v_priority != sys.maxsize)
+        # v_has_priority = (v_priority != sys.maxsize)
 
-        num_neighbors = 0
-        for n in nx.all_neighbors(self.G, v):
-            if self.G.node[n]['priority'] > v_priority or not v_has_priority:
-                num_neighbors += 1
+        num_neighbors = len(neighbors)
+        #print('%s of pri %s has %s neighbors to calc' % (v, self.G.node[v]['priority'], num_neighbors))
+        # for n in nx.all_neighbors(self.G, v):
+        #     if self.G.node[n]['priority'] > v_priority or not v_has_priority:
+        #         num_neighbors += 1
 
         # compute the edge difference
         # edge difference = shortcuts - contractable "remaining" incident edges
@@ -320,7 +326,7 @@ class GraphContractor(object):
         self.updates = {}
 
     #@profile
-    def contract_graph(self, simulated=True):
+    def contract_graph(self, initialize=True):
 
         timer = Timer(__name__)
         timer.start('Contracting graph...')
@@ -334,9 +340,11 @@ class GraphContractor(object):
             except KeyError as e:
                 break
 
-            if simulated:
+            if initialize:
                 self.G.node[v]['priority'] = count
                 v_priority = count
+
+            #print('%s: %s nodes left' % (v, self.G.number_of_nodes() - count))
 
             if count % 10 == 0:
                 print('\r%.4f%%' % ((count / self.num_nodes) * 100), end = '')
@@ -347,13 +355,13 @@ class GraphContractor(object):
             neighbors = set()
             count += 1
 
-            for u, u_edge in self._predecessors(v, simulated):
+            for u, u_edge in self._predecessors(v, initialize):
 
                 neighbors.add(u)
                 w_nodes = []
                 uvw_costs = []
 
-                for w, w_edge in self._successors(v, simulated):
+                for w, w_edge in self._successors(v, initialize):
 
                     if u == w:
                         continue
@@ -366,7 +374,7 @@ class GraphContractor(object):
                 if w_nodes:
 
                     # local search to get which paths need shortcuts
-                    _, ends = self._local_search(u, v, w_nodes, uvw_costs, simulated)
+                    _, ends = self._local_search(u, v, w_nodes, uvw_costs, initialize)
 
                     # for each path add a shortcut
                     for end in ends:
@@ -381,12 +389,14 @@ class GraphContractor(object):
 
                         self.G.add_edge(u, end, **tags)
 
-            if simulated:
-                
+            if initialize:
+
+                #print('%s neighbors to update' % (len(neighbors)))
+
                 for n in neighbors:
 
                     self.G.node[n]['adj_count'] += 1
-                    new_priority = self._calc_node_priority(n, simulated)
+                    new_priority = self._calc_node_priority(n, initialize)
                     self._node_priority_pq.push(new_priority, n)
 
             #print('node: %d, inspecting %d' % (v, v_ct))
