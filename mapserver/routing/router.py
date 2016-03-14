@@ -1,5 +1,5 @@
 import logging
-import math, random
+import sys, random
 
 from mapserver.util.pq import PriorityQueue
 from mapserver.util.timer import Timer
@@ -112,7 +112,7 @@ class Router():
 
         stalled = [{}, {}]
 
-        best_dist = math.inf
+        best_dist = sys.maxsize
         best_node = None
 
         # store all possible paths
