@@ -1,7 +1,6 @@
 import logging
 import sys, random
 
-from pqdict import minpq
 from mapserver.util.pq import PriorityQueue
 from mapserver.util.timer import Timer
 
@@ -15,9 +14,9 @@ class Router():
         self.G = G
         self.weight_label = weight_label
 
-        # self.short_path = []
-        # self.touch_path_fwd = []
-        # self.touch_path_bwd = []
+        self.short_path = []
+        self.touch_path_fwd = []
+        self.touch_path_bwd = []
         self.decision_map = decision_map
         self.exact = True
         self.opt = 0
@@ -84,35 +83,34 @@ class Router():
             # queue all neighbors
             q.extend([(o, dist_to_n + dist_n_o) for o, dist_n_o in self._neighbors(r, n)])
 
-    #@profile
     def _bidirectional_dijkstra(self, start_node, end_node):
 
-        # self.short_path = []
-        # self.touch_path_fwd = []
-        # self.touch_path_bwd = []
+        self.short_path = []
+        self.touch_path_fwd = []
+        self.touch_path_bwd = []
 
         # r = 0 for forward search, 1 for backward search
         r = 1
 
         # reset queues
-        # self._forward_pq = PriorityQueue()
-        # self._backward_pq = PriorityQueue()
+        self._forward_pq = PriorityQueue()
+        self._backward_pq = PriorityQueue()
 
-        # set up queues [fwd, bkwrd]
-        qs = [minpq(), minpq()]
+        # set up queues
+        qs = [self._forward_pq, self._backward_pq]
 
         # add start_node with cost 0 to forward search
-        qs[0].additem(start_node, 0)
+        qs[0].push(0, start_node)
 
         # add end_node with cost 0 to backward search
-        qs[1].additem(end_node, 0)
+        qs[1].push(0, end_node)
 
         # dictionary visted node -> (cost to node from start, previous node)
         source = [{}, {}]
         source[0][start_node] = (0, None)
         source[1][end_node] = (0, None)
 
-        # stalled = [{}, {}]
+        stalled = [{}, {}]
 
         best_dist = sys.maxsize
         best_node = None
@@ -123,20 +121,18 @@ class Router():
         stalled_count = 0
 
         # while the queues are not empty
-        while qs[0]._heap or qs[1]._heap:
-
-            # if the other queue is not empty, switch directions
-            if qs[1 - r]._heap: r = 1 - r
+        while qs[0].not_empty() or qs[1].not_empty():
 
             # if the smallest cost to node in either queue is bigger than the
             # shortest path distance, we can halt
+            if best_dist <= min(qs[0].min_val(), qs[1].min_val()): break
 
-            if best_dist <= qs[r].topitem()[1]:
-                break
+            # if the other queue is not empty, switch directions
+            if qs[1 - r].not_empty(): r = 1 - r
 
             # pop the minimum node
             try:
-                u, dist_to_u = qs[r].popitem()
+                dist_to_u, u = qs[r].pop()
             except KeyError as e:
                 break
 
@@ -169,10 +165,10 @@ class Router():
             for v, edge_dist in self._neighbors(r, u):
 
                 # print('dir: %d examining %d->%d' % (r, u, v))
-                # if r == 0:
-                #     self.touch_path_fwd.extend([(u, v)])
-                # else:
-                #     self.touch_path_bwd.extend([(v, u)])
+                if r == 0:
+                    self.touch_path_fwd.extend([(u, v)])
+                else:
+                    self.touch_path_bwd.extend([(v, u)])
 
                 # compute tentative distance
                 dist_to_v_via_u = dist_to_u + edge_dist
@@ -181,16 +177,13 @@ class Router():
                 if v not in source[r] or dist_to_v_via_u < source[r][v][0]:
 
                     # insert/update the queue, priority = new_cost
-                    try:
-                        qs[r].additem(v, dist_to_v_via_u)
-                    except KeyError as e:
-                        qs[r].updateitem(v, dist_to_v_via_u)
+                    qs[r].push(dist_to_v_via_u, v)
 
                     # update the dictionary to link current -> neighbor
                     source[r][v] = (dist_to_v_via_u, u)
 
                     # if v is stalled, unstall it
-                    # if v in stalled[r]: del stalled[r][v]
+                    if v in stalled[r]: del stalled[r][v]
 
         if best_node is None: return []
 
@@ -206,10 +199,6 @@ class Router():
         
             #best_node = random.choice(choices[0:2])
             best_node = choices[self.opt]
-
-
-        print(source[0])
-        print(source[1])
 
         route =  self.__path_unpack(source[0], start_node, best_node) + self.__path_unpack(source[1], end_node, best_node, forwards_search = False)
 
@@ -301,10 +290,10 @@ class Router():
             previous_node = previous[current_node][1]
 
             if forwards_search:
-                #self.short_path.extend([(previous_node, current_node)])
+                self.short_path.extend([(previous_node, current_node)])
                 full_path = self.__uncontract_forwards(current_node, previous_node)
             else:
-                #self.short_path.extend([(current_node, previous_node)])
+                self.short_path.extend([(current_node, previous_node)])
                 full_path = self.__uncontract_backwards(current_node, previous_node)
                 
 

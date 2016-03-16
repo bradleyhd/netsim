@@ -30,15 +30,16 @@ with open('data/' + args.data_file + '_3.graph', 'r') as file:
     data = json.load(file)
     graph_3 = json_graph.node_link_graph(data)
 
-
-num_nodes_23 = graph_2.number_of_nodes() + graph_3.number_of_nodes()
-num_nodes_2 = graph_2.number_of_nodes()
-
 for n, d in graph.nodes(data=True):
-  d['priority'] += num_nodes_23
+  d['tier'] = 1
 
-for n, d in graph_2.nodes(data=True):
-  d['priority'] += num_nodes_2
+for n in graph_2.nodes():
+  if not 'tier' in graph.node[n]:
+    graph.node[n]['tier'] = 2
+
+for n in graph_3.nodes():
+  if not 'tier' in graph.node[n]:
+    graph.node[n]['tier'] = 3
 
 for x, y, d in graph_2.edges(data=True):
   graph.add_edge(x, y, **d)
@@ -46,8 +47,26 @@ for x, y, d in graph_2.edges(data=True):
 for x, y, d in graph_3.edges(data=True):
   graph.add_edge(x, y, **d)
 
-C = GraphContractor(config, graph)
-C.set_flags()
+# C = GraphContractor(config, graph)
+# C.set_flags()
+
+for u, v, edge_data in graph.edges_iter(data = True):
+
+    u_priority = graph.node[u]['priority']
+    v_priority = graph.node[v]['priority']
+
+    u_tier = graph.node[u]['tier']
+    v_tier = graph.node[v]['tier']
+
+    # for edge going from u -> v
+    if u_priority < v_priority or u_tier > v_tier:
+        edge_data['level'] = 1
+        edge_data['up'] = True
+    elif u_priority > v_priority or u_tier < v_tier:
+        edge_data['level'] = -1
+        edge_data['down'] = True
+    else:
+        print('wtf %s %s' % (u, v))
 
 # write graph to file
 out_file_name = args.saveas + '_merged.graph' if args.saveas else args.data_file + '_merged.graph'
