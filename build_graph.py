@@ -54,44 +54,39 @@ f = open(out_file_path, 'wb')
 f.write(pickle.dumps(sim_data))
 f.close()
 
-# nodes = []
-# priorities = {}
-# colors = []
-# count = 0
+nodes = []
+priorities = {}
+colors = []
+count = 0
 
-# plt.figure(num=None, figsize=(16, 12), dpi=300, facecolor='w', edgecolor='k')
+plt.figure(num=None, figsize=(16, 12), dpi=300, facecolor='w', edgecolor='k')
 
-# positions = {}
-# for node in graph.nodes(data = True):
-#     #print(node)
-#     positions[node[0]] = (float(node[1]['lon']), float(node[1]['lat']))
+positions = {}
+for node in graph.nodes(data = True):
+    positions[node[0]] = (float(node[1]['lon']), float(node[1]['lat']))
 
-# reg_edges = []
-# up_edges = []
-# down_edges = []
-# for x, y, data in graph.edges(data = True):
-#     if not 'dc' in data:
-#       reg_edges.append((x, y))
-#     else:
-#       up_edges.append((x, y))
-#     # if 'up' in data:
-#     #     up_edges.append((x, y))
-#     # if 'down' in data:
-#     #     down_edges.append((x, y))
+reg_edges = []
+up_edges = []
+down_edges = []
+for x, y, data in decision_graph.edges(data = True):
+    if not data['is_shortcut']:
+      reg_edges.append((x, y))
 
-# # for n, d in graph.nodes(data = True):
-# #   if 'decision_node' in d:
-# #     decision_nodes.append(n)
+labels = {}
+for n, d in decision_graph.nodes(data=True):
+  labels[n] = n
 
-# nx.draw_networkx_nodes(graph, pos = positions, nodelist = graph.nodes(), node_color = 'c', linewidths = 0, node_size = 1.0, node_shape = 'o')
-# edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = reg_edges, edge_color = 'w', width = 0.05, alpha = 1.0, arrows = True)
+props = dict(facecolor='none',edgecolor='none',boxstyle='round')
 
-# edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = up_edges, edge_color = 'r', width = 0.05, alpha = 1.0, arrows = True)
-# # edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = down_edges, edge_color = 'b', width = 0.05, alpha = 1.0, arrows = False)
+nx.draw_networkx_nodes(decision_graph, pos = positions, nodelist = decision_graph.nodes(), node_color = 'c', linewidths = 0, node_size = 0.05, node_shape = 'o')
+edge_plot = nx.draw_networkx_edges(decision_graph, pos = positions, edgelist = reg_edges, edge_color = 'w', width = 0.05, alpha = 1.0, arrows = True)
 
+edge_plot = nx.draw_networkx_edges(decision_graph, pos = positions, edgelist = up_edges, edge_color = 'r', width = 0.05, alpha = 1.0, arrows = True)
+# edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = down_edges, edge_color = 'b', width = 0.05, alpha = 1.0, arrows = False)
+nx.draw_networkx_labels(decision_graph, pos=positions, labels = labels, font_size=0.25, font_color='w', bbox=props)
 
-# plt.axis('on')
-# plt.axes().set_aspect('equal', 'datalim')
-# plt.axes().set_axis_bgcolor('black')
+plt.axis('on')
+plt.axes().set_aspect('equal', 'datalim')
+plt.axes().set_axis_bgcolor('black')
 
-# plt.savefig('test.pdf')
+plt.savefig('test.pdf')

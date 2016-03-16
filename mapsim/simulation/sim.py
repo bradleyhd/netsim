@@ -2,7 +2,7 @@ import networkx as nx
 import numpy as np
 import simpy as simpy
 import time as time
-import logging, json, collections
+import logging, json, collections, requests
 from networkx.readwrite import json_graph as imports
 from datetime import datetime
 from mapsim.simulation.car import Car
@@ -31,7 +31,7 @@ class Sim:
     self.sim_duration = self.__config['sim_duration']
 
     self.bottlenecks = self.__generate_bottlenecks()
-    self.trips = self.__generate_trips()
+    # self.trips = self.__generate_trips()
     self.buckets = buckets
     self.adaptive = False
 
@@ -124,14 +124,26 @@ class Sim:
     self.__log.debug('Adding cars and calculating intial routes...')
     cars = []
 
+    res = requests.get('http://localhost:5000/routes/generate/%d' % (self.num_cars))
+    routes = res.json()
+
+    delay_window = (self.num_cars * 60000) / self.__config['cars_per_min']
     for i in range(0, self.num_cars):
 
-      delay, start, end = self.trips[i]
-      c = Car(i, self, delay, start, end)
-
+      wait = np.random.randint(0, delay_window)
+      c = Car(i, self, wait, routes[i])
       cars.append(c)
 
     return cars
+
+  def location_watcher(self):
+
+    while True:
+
+      for car in self.cars:
+        car.log_location()
+
+      yield self.env.timeout(1000)
 
   def setup(self, adaptive=False):
     """Prepares a simulation for use before a run"""
@@ -158,6 +170,8 @@ class Sim:
     if self.__config['signals']:
       for signal in self.signals:
         self.env.process(signal.run())
+
+    self.env.process(self.location_watcher())
 
   def run(self):
     """Runs the simulation"""

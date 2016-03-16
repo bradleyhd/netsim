@@ -13,24 +13,26 @@ class NoMoreCellsException(Exception):
 class Car(object):
 
     #@profile
-    def __init__(self, id, sim, delay, start_node, end_node):
+    def __init__(self, id, sim, delay, trip):
 
         self.sim = sim
         #self.sim.env = sim.env
         self.graph = sim.graph
         
         self.id = id
-        self.start_node = start_node
-        self.end_node = end_node
         self.delay = delay
         self.location_history = True
 
         # np.random.seed()
-        self.start_node = np.random.choice([x for x, d in self.graph.nodes(data=True) if 'decision_node' in d])
-        self.end_node = np.random.choice([x for x, d in self.graph.nodes(data=True) if 'decision_node' in d])
+        # self.start_node = np.random.choice([x for x, d in self.graph.nodes(data=True) if 'decision_node' in d])
+        # self.end_node = np.random.choice([x for x, d in self.graph.nodes(data=True) if 'decision_node' in d])
+        self.trip = trip
+        if self.trip:
+            self.start_node = trip[0][0]
+            self.end_node = trip[-1][1]
         # self.start_node = 1827
         # self.end_node = 1914
-        self.trip = self.__route(self.start_node, self.end_node)
+        #self.trip = self.__route(self.start_node, self.end_node)
 
         #print('%s: %s' % (self.id, self.trip))
         self.original_trip = self.trip.copy()
@@ -43,8 +45,8 @@ class Car(object):
 
         # Start the run process everytime an instance is created.
         
-        self.leg = -1
-        self.cell = -1
+        self.leg = 0
+        self.cell = 0
 
         self.driving_time = 0
         self.driving_distance = 0
@@ -142,7 +144,7 @@ class Car(object):
         #     duration = duration + 15000 #self.sim.bottlenecks[to_x]
 
         # log the location
-        if self.location_history: self.__log_location_now(to_leg, to_cell, to_arc)
+        #if self.location_history: self.__log_location_now(to_leg, to_cell, to_arc)
 
         # scale to seconds
         #duration = duration / 1000.0
@@ -162,6 +164,11 @@ class Car(object):
             (lon, lat) = arc['bucket_locations'][cell]
             entry = (lon, lat, abs_time.isoformat())
             self.history.append(entry)
+
+    def log_location(self):
+
+        # if self.leg != -1 and self.cell != -1:
+        self.__log_location_now(self.leg, self.cell)
 
     #@profile
     def run(self):
@@ -190,6 +197,9 @@ class Car(object):
                 # if the car can move
                 if self.__can_move_to(current_leg, current_cell, next_leg, next_cell):
                     #print('yes')
+
+                    self.leg = current_leg
+                    self.cell = current_cell
 
                     wait_count = 0
 
@@ -225,8 +235,8 @@ class Car(object):
                     # print('car can not move, sleeping')
                     wait_count += 1
 
-                    if self.location_history and wait_count % 5 == 0:
-                        self.__log_location_now(current_leg, current_cell)
+                    # if self.location_history and wait_count % 10 == 0:
+                    #     self.__log_location_now(current_leg, current_cell)
 
                     t = 200
                     yield self.sim.env.timeout(t)

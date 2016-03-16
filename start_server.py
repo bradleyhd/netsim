@@ -10,6 +10,10 @@ server = None
 def hello_world():
   return 'Hello World!'
 
+@app.route('/routes/generate/<n>')
+def generate(n):
+  return json.dumps(server.generate(int(n)))
+
 @app.route('/route/<start>/<end>')
 def route(start, end):
   return json.dumps(server.route(int(start), int(end), False))
@@ -49,5 +53,5 @@ if __name__ == '__main__':
 
       server = Server(config)
 
-  app.run(debug=True)
+  app.run(threaded=True, debug=True)
   #app.run(debug=True)

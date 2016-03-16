@@ -1,4 +1,6 @@
 import os, json, logging, pickle
+import numpy as np
+
 from collections import defaultdict
 from copy import deepcopy
 from mapserver.graph.contractor import GraphContractor
@@ -69,6 +71,19 @@ class Server():
       return self.routers[self.switch].route(start, end)
     else:
       return self.base_router.route(start, end)
+
+  def generate(self, n):
+
+    x = np.random.choice(self.base_graph, n)
+    y = np.random.choice(self.base_graph, n)
+    # x = [6793] * n
+    # y = [3535] * n
+
+    routes = []
+    for i in range(n):
+      routes.append(self.route(x[i], y[i]))
+
+    return routes
 
   def report(self, start, end, duration, graph_update_frequency=None):
 
