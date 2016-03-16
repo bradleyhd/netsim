@@ -1,6 +1,6 @@
 import networkx as nx
 import numpy as np
-import argparse, json, random, time
+import argparse, json, random, time, pickle
 
 from mapserver.graph.builder import GraphBuilder
 from mapserver.graph.contractor import GraphContractor
@@ -28,26 +28,20 @@ with open('config.json', 'r') as file:
 
 data_file_path = 'data/%s.osm' % args.data_file
 
-# build the graph
-factory = GraphBuilder(config)
-G = factory.from_file(data_file_path, True)
-
-# with open('data/battleground_merged.graph', 'r') as file:
+with open('data/%s.decision.graph' % args.data_file, 'r') as file:
       
-#       data = json.load(file)
-#       G = json_graph.node_link_graph(data)
-sim_data = factory.get_sim_data(True)
+    data = json.load(file)
+    G = json_graph.node_link_graph(data)
 
-factory2 = GraphBuilder(config)
-H = factory2.from_file(data_file_path)
+with open('data/%s.sim' % args.data_file, 'rb') as file:
+      
+    sim_data = pickle.load(file)
 
-# contract the graph
-C = GraphContractor(config, G)
-C.order_nodes()
-C.contract_graph()
-C.set_flags()
+with open('data/%s.graph' % args.data_file, 'r') as file:
+      
+    data = json.load(file)
+    H = json_graph.node_link_graph(data)
 
-#decision_map=sim_data['decision_route_map']
 router = Router(G, decision_map=sim_data['decision_route_map'])
 
 broken = []
@@ -148,54 +142,55 @@ print('')
 print('Mean speedup: %s' % (np.mean(ref_speeds)/np.mean(imp_speeds)))
 
 
-nodes = []
-priorities = {}
-colors = []
-count = 0
+if count > 0:
+    nodes = []
+    priorities = {}
+    colors = []
+    count = 0
 
-plt.figure(num=None, figsize=(16, 12), dpi=300, facecolor='w', edgecolor='k')
+    plt.figure(num=None, figsize=(16, 12), dpi=300, facecolor='w', edgecolor='k')
 
-positions = {}
-for node in H.nodes(data = True):
-    positions[node[0]] = (float(node[1]['lon']), float(node[1]['lat']))
+    positions = {}
+    for node in H.nodes(data = True):
+        positions[node[0]] = (float(node[1]['lon']), float(node[1]['lat']))
 
-labels = {}
-h_labels = {}
-# for n, d in H.nodes(data=True):
-#     labels[n] = n
+    labels = {}
+    h_labels = {}
+    # for n, d in H.nodes(data=True):
+    #     labels[n] = n
 
-for x, y, data in G.edges(data = True):
-    # if (x, y) in path:
-    if not data['is_shortcut']:
-        labels[(x, y)] = data['ttt']
+    for x, y, data in G.edges(data = True):
+        # if (x, y) in path:
+        if not data['is_shortcut']:
+            labels[(x, y)] = data['ttt']
 
-# for x, y, data in H.edges(data = True):
-#     if (x, y) in check_path:
-#         h_labels[(x, y)] = data['ttt']
+    # for x, y, data in H.edges(data = True):
+    #     if (x, y) in check_path:
+    #         h_labels[(x, y)] = data['ttt']
 
-# for n, d in graph.nodes(data = True):
-#   if 'decision_node' in d:
-#     decision_nodes.append(n)
+    # for n, d in graph.nodes(data = True):
+    #   if 'decision_node' in d:
+    #     decision_nodes.append(n)
 
-# nx.draw_networkx_nodes(G, pos = positions, nodelist = G.nodes(), node_color = 'c', linewidths = 0, node_size = 0.05, node_shape = 'o')
-# edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = H.edges(), edge_color = 'w', width = 0.05, alpha = 1.0, arrows = True)
-# edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = [(x, y) for x, y, d in G.edges(data=True) if not d['is_shortcut']], edge_color = 'y', width = 0.05, alpha = 1.0, arrows = True)
-# # edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = [(x, y) for x, y in G.edges() if 'up' in G[x][y]], edge_color = 'r', width = 0.05, alpha = 0.5, arrows = True)
-# # edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = [(x, y) for x, y in G.edges() if 'down' in G[x][y]], edge_color = 'b', width = 0.05, alpha = 0.5, arrows = True)
+    # nx.draw_networkx_nodes(G, pos = positions, nodelist = G.nodes(), node_color = 'c', linewidths = 0, node_size = 0.05, node_shape = 'o')
+    # edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = H.edges(), edge_color = 'w', width = 0.05, alpha = 1.0, arrows = True)
+    # edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = [(x, y) for x, y, d in G.edges(data=True) if not d['is_shortcut']], edge_color = 'y', width = 0.05, alpha = 1.0, arrows = True)
+    # # edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = [(x, y) for x, y in G.edges() if 'up' in G[x][y]], edge_color = 'r', width = 0.05, alpha = 0.5, arrows = True)
+    # # edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = [(x, y) for x, y in G.edges() if 'down' in G[x][y]], edge_color = 'b', width = 0.05, alpha = 0.5, arrows = True)
 
-edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = path, edge_color = 'r', width = 0.05, alpha = 1.0, arrows = True)
-edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = check_path, edge_color = 'g', width = 0.05, alpha = 1.0, arrows = True)
-#edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = broken, edge_color = 'b', width = 0.05, alpha = 1.0, arrows = True)
-
-
-props = dict(facecolor='none',edgecolor='none',boxstyle='round')
-nx.draw_networkx_edge_labels(G, pos=positions, edge_labels = labels, font_size=0.25, font_color='w', bbox=props)
-nx.draw_networkx_edge_labels(H, pos=positions, edge_labels = h_labels, font_size=0.25, font_color='w', bbox=props)
-# nx.draw_networkx_labels(H, pos=positions, labels = labels, font_size=0.25, font_color='w', bbox=props)
+    edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = path, edge_color = 'r', width = 0.05, alpha = 1.0, arrows = True)
+    edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = check_path, edge_color = 'g', width = 0.05, alpha = 1.0, arrows = True)
+    #edge_plot = nx.draw_networkx_edges(H, pos = positions, edgelist = broken, edge_color = 'b', width = 0.05, alpha = 1.0, arrows = True)
 
 
-# plt.axis('on')
-# plt.axes().set_aspect('equal', 'datalim')
-# plt.axes().set_axis_bgcolor('black')
+    props = dict(facecolor='none',edgecolor='none',boxstyle='round')
+    nx.draw_networkx_edge_labels(G, pos=positions, edge_labels = labels, font_size=0.25, font_color='w', bbox=props)
+    nx.draw_networkx_edge_labels(H, pos=positions, edge_labels = h_labels, font_size=0.25, font_color='w', bbox=props)
+    # nx.draw_networkx_labels(H, pos=positions, labels = labels, font_size=0.25, font_color='w', bbox=props)
 
-# plt.savefig('test.pdf')
+
+    # plt.axis('on')
+    # plt.axes().set_aspect('equal', 'datalim')
+    # plt.axes().set_axis_bgcolor('black')
+
+    # plt.savefig('test.pdf')

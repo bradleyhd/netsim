@@ -40,8 +40,14 @@ if __name__ == '__main__':
   config = {}
   with open('config.json', 'r') as file:
       config = json.load(file)
-      config['graph_file'] = 'data/%s.graph' % args.graph_file
+      
+      if config['decision_graph']:
+        config['graph_file'] = 'data/%s.decision.graph' % args.graph_file
+        config['sim_file'] = 'data/%s.sim' % args.graph_file
+      else:
+        config['graph_file'] = 'data/%s.graph' % args.graph_file
+
       server = Server(config)
 
-  app.run(threaded=True, debug=True)
+  app.run(debug=True)
   #app.run(debug=True)

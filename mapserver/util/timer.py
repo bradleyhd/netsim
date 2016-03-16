@@ -19,7 +19,6 @@ class Timer():
     def stop(self, msg='%s'):
 
         self.elapsed = time.perf_counter() - self.start_time
-        print(self.elapsed)
         fmt = datetime.timedelta(seconds=self.elapsed)
 
         if self.__log_level == 'info':

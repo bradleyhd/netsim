@@ -21,31 +21,35 @@ with open('config.json', 'r') as file:
 data_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + args.data_file + '.osm'
 
 # build the graph
-factory = GraphBuilder(config, tier=None)
-graph = factory.from_file(data_file_path, True)
+factory = GraphBuilder(config)
+graph, decision_graph = factory.from_file(data_file_path, True)
+sim_data = factory.get_sim_data()
 
-numed = graph.number_of_edges()
-sim_data = factory.get_sim_data(True)
-
-# contract the graph
-C = GraphContractor(config, graph)
+# contract the decision graph
+C = GraphContractor(config, decision_graph)
 C.order_nodes()
 C.contract_graph()
 C.set_flags()
 
-# write graph to file
+# write regular graph to file
 out_file_name = args.saveas + '.graph' if args.saveas else args.data_file + '.graph'
-out_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + out_file_name
-
+out_file_path = 'data/' + out_file_name
 f = open(out_file_path, 'w')
 data = json_graph.node_link_data(graph)
+f.write(json.dumps(data))
+f.close()
+
+# write decision graph to file
+out_file_name = args.saveas + '.decision.graph' if args.saveas else args.data_file + '.decision.graph'
+out_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + out_file_name
+f = open(out_file_path, 'w')
+data = json_graph.node_link_data(decision_graph)
 f.write(json.dumps(data))
 f.close()
 
 # write sim data to file
 out_file_name = args.saveas + '.sim' if args.saveas else args.data_file + '.sim'
 out_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + out_file_name
-
 f = open(out_file_path, 'wb')
 f.write(pickle.dumps(sim_data))
 f.close()

@@ -1,4 +1,4 @@
-import os, json, logging
+import os, json, logging, pickle
 from collections import defaultdict
 from copy import deepcopy
 from mapserver.graph.contractor import GraphContractor
@@ -32,14 +32,30 @@ class Server():
       graph = imports.node_link_graph(data)
 
       self.base_graph = graph
-      self.base_router = Router(self.base_graph)
-
       self.graphs = [graph.copy(), graph.copy()]
+
       self.contractors = [
         GraphContractor(config, self.graphs[0]),
         GraphContractor(config, self.graphs[1])
       ]
-      self.routers = [Router(self.graphs[0]), Router(self.graphs[1])]
+
+      if self.__config['decision_graph']:
+
+        sim_file_path = self.__config['sim_file']
+        with open(sim_file_path, 'rb') as sim_file:
+
+          sim_data = pickle.load(sim_file)
+
+          self.base_router = Router(self.base_graph, decision_map=sim_data['decision_route_map'])
+
+          self.routers = [
+            Router(self.graphs[0], decision_map=sim_data['decision_route_map']),
+            Router(self.graphs[1], decision_map=sim_data['decision_route_map'])
+          ]
+          
+      else:
+        self.base_router = Router(self.base_graph)
+        self.routers = [Router(self.graphs[0]), Router(self.graphs[1])]
 
     self._log.debug('Graph loaded successfully.')
 
@@ -52,6 +68,8 @@ class Server():
     if adaptive:
       return self.routers[self.switch].route(start, end)
     else:
+      print((start in self.base_graph))
+      print((end in self.base_graph))
       return self.base_router.route(start, end)
 
   def report(self, start, end, duration, graph_update_frequency=None):

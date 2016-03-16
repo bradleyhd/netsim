@@ -34,6 +34,7 @@ class GraphBuilder(object):
         }
 
         self.graph = nx.DiGraph()
+        self.decision_graph = None
 
     def __start_element_handler(self, name, attrs):
         '''handles a new XML element'''
@@ -186,14 +187,23 @@ class GraphBuilder(object):
 
         if decision_graph:
 
-            self.__find_decision_nodes()
+            # compute the decision graph
             self.decision_graph = self.__decision_graph()
+
+            # remove orphan nodes from the regular graph
+            solitary = [n for n, d in self.graph.degree_iter() if d == 0]
+            self.graph.remove_nodes_from(solitary)
+
+            # mark nodes in the regular graph
+            for n in self.decision_graph.nodes():
+
+                self.graph.node[n]['decision_node'] = True
 
             timer.stop()
             self.__log.info('Graph successfully built')
             self.__log.info('Nodes: %s Edges: %s' % ('{:,}'.format(self.decision_graph.number_of_nodes()), '{:,}'.format(self.decision_graph.number_of_edges())))
 
-            return self.decision_graph
+            return self.graph, self.decision_graph
 
         else:
 
@@ -386,13 +396,13 @@ class GraphBuilder(object):
 
         return segments
 
-    def get_sim_data(self, decision_graph=False):
+    def get_sim_data(self):
 
         sim_data = {
-            'segments': None #self.__compute_segments()
+            'segments': self.__compute_segments()
         }
 
-        if decision_graph:
+        if self.decision_graph is not None:
             sim_data['decision_route_map'] = self.decision_map
 
         return sim_data

@@ -1,6 +1,6 @@
 import math, datetime, random, requests, json
 import numpy as np
-from mapsim.util.geo import estimate_location
+from mapserver.util.geo import estimate_location
 from mapsim.simulation.signal import Signal
 # from profilehooks import profile, timecall, coverage
 
@@ -26,11 +26,12 @@ class Car(object):
         self.location_history = True
 
         # np.random.seed()
-        self.start_node = np.random.choice(self.graph.nodes())
-        self.end_node = np.random.choice(self.graph.nodes())
+        self.start_node = np.random.choice([x for x, d in self.graph.nodes(data=True) if 'decision_node' in d])
+        self.end_node = np.random.choice([x for x, d in self.graph.nodes(data=True) if 'decision_node' in d])
         # self.start_node = 1827
         # self.end_node = 1914
         self.trip = self.__route(self.start_node, self.end_node)
+
         #print('%s: %s' % (self.id, self.trip))
         self.original_trip = self.trip.copy()
         self.actual_trip = []
@@ -54,6 +55,7 @@ class Car(object):
         self.wait = 0
         self.halt = False
         self.done = False
+        self.adaptive = False
 
     #@profile
     def __route(self, start, end):
@@ -80,6 +82,8 @@ class Car(object):
         # get the target leg
         (x, y) = self.trip[to_leg]
         #arc = self.graph[x][y]
+        print('%s: %s->%s' % (self.id, x, y))
+        print((y in self.graph[x]))
         arc = self.sim.buckets[x][y]
 
         # if the next bucket doesn't exist
