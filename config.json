@@ -1,5 +1,5 @@
 {
-    "num_cars": 100,
+    "num_cars": 1000,
     "time_units": "ms",
     "sim_duration": 500000,
     "num_bottlenecks": 20,
@@ -13,6 +13,7 @@
     "graph_update_frequency": 5,
 
     "decision_graph": true,
+    "fast_contract": true,
     "graph_weight_label": "ttt",
     "graph_weight_smoothing_factor": 0.25,
     "graph_weight_decay_factor": 0.75,

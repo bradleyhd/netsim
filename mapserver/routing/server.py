@@ -52,7 +52,7 @@ class Server():
             Router(self.graphs[0], decision_map=sim_data['decision_route_map']),
             Router(self.graphs[1], decision_map=sim_data['decision_route_map'])
           ]
-          
+
       else:
         self.base_router = Router(self.base_graph)
         self.routers = [Router(self.graphs[0]), Router(self.graphs[1])]
@@ -68,8 +68,6 @@ class Server():
     if adaptive:
       return self.routers[self.switch].route(start, end)
     else:
-      print((start in self.base_graph))
-      print((end in self.base_graph))
       return self.base_router.route(start, end)
 
   def report(self, start, end, duration, graph_update_frequency=None):

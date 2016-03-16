@@ -9,6 +9,7 @@ class GraphContractor(object):
     def __init__(self, config, G):
 
         self.__log = logging.getLogger(__name__)
+        self.__config = config
 
         self.G = G
         self.num_nodes = self.G.number_of_nodes()
@@ -137,6 +138,10 @@ class GraphContractor(object):
     #@profile
     def _calc_node_priority(self, v, initialize=True):
 
+        if self.__config['fast_contract']:
+
+            return len(list(self._predecessors(v, initialize))) + len(list(self._successors(v, initialize)))
+
         total_search_size = 0
         total_num_shortcuts = 0
         neighbors = set()
@@ -163,38 +168,10 @@ class GraphContractor(object):
                 total_search_size += search_size
                 total_num_shortcuts += len(sp_ends)
 
-        #num_neighbors = len(list(self._predecessors(v, initialize))) + len(list(self._successors(v, initialize)))
         num_neighbors = len(neighbors)
 
-        bonus = 0
-        # for u, u_edge in self._predecessors(v, initialize):
-
-        #     if u_edge['is_shortcut']:
-        #         continue
-
-        #     if u_edge['highway'] in ['motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link']:
-        #         bonus += 1
-        #     elif u_edge['highway'] in ['secondary', 'secondary_link', 'tertiary', 'tertiary_link', 'road']:
-        #         bonus += 0.5
-        #     # else:
-        #     #     bonus -= 1
-
-        # for w, w_edge in self._successors(v, initialize):
-
-        #     if w_edge['is_shortcut']:
-        #         continue
-
-        #     if w_edge['highway'] in ['motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link']:
-        #         bonus += 1
-        #     elif w_edge['highway'] in ['secondary', 'secondary_link', 'tertiary', 'tertiary_link', 'road']:
-        #         bonus += 0.5
-        #     # else:
-        #     #     bonus -= 1
-
         # compute the priority
-        #priority = (total_num_shortcuts - num_neighbors) + total_search_size + (3 * self.G.node[v]['adj_count']) + bonus
         priority = (total_num_shortcuts - num_neighbors) + total_search_size + (3 * self.G.node[v]['adj_count'])
-        #priority = num_neighbors
 
         return priority
 
@@ -212,35 +189,6 @@ class GraphContractor(object):
 
         timer.stop()
         self.__log.info('%d nodes, %.10f ms/node' % (self.num_nodes, timer.elapsed / self.num_nodes))
-
-    # def re_order_nodes(self):
-
-    #     pq_copy = FastUpdateBinaryHeap(self.num_nodes, self.num_nodes + 1)
-
-    #     while self._node_priority_pq.count:
-
-    #         _, v = self._node_priority_pq.pop()
-    #         priority = self._calc_node_priority(v)
-    #         pq_copy.push(priority, v)
-
-    #     self._node_priority_pq = pq_copy
-
-    def __complete_early_contraction(self, count):
-
-        while self._node_priority_pq.count:
-
-            _, v = self._node_priority_pq.pop()
-            self.G.node[v]['priority'] = count
-            count += 1
-
-    def update(self, s, t, weight):
-
-        if not (s, t) in self.updates:
-            self.updates[(s, t)] = []
-
-        self.updates[(s, t)].append(weight)
-        if s == 1899:
-            print('update: %s->%s %s' % (s, t, weight))
 
     def repair(self, reports):
 

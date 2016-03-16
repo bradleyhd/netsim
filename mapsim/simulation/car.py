@@ -55,7 +55,6 @@ class Car(object):
         self.wait = 0
         self.halt = False
         self.done = False
-        self.adaptive = False
 
     #@profile
     def __route(self, start, end):
@@ -82,8 +81,6 @@ class Car(object):
         # get the target leg
         (x, y) = self.trip[to_leg]
         #arc = self.graph[x][y]
-        print('%s: %s->%s' % (self.id, x, y))
-        print((y in self.graph[x]))
         arc = self.sim.buckets[x][y]
 
         # if the next bucket doesn't exist
@@ -139,10 +136,10 @@ class Car(object):
         #battleground 1899 7041
         #print('car %s moving to %s, %s' % (self.id, to_x, to_y))
 
-        if (to_x == 1899 and to_cell == 0):
-        #if to_x in self.sim.bottlenecks and to_cell == 0:
-            print('>>>>>>>>>>>>>>SLOWING %s' % self.id)
-            duration = duration + 15000 #self.sim.bottlenecks[to_x]
+        # if (to_x == 1899 and to_cell == 0):
+        # #if to_x in self.sim.bottlenecks and to_cell == 0:
+        #     print('>>>>>>>>>>>>>>SLOWING %s' % self.id)
+        #     duration = duration + 15000 #self.sim.bottlenecks[to_x]
 
         # log the location
         if self.location_history: self.__log_location_now(to_leg, to_cell, to_arc)
@@ -277,6 +274,13 @@ class Car(object):
                     #pass
                     
                 self.actual_trip.append([x, y])
+
+                # log time
+                if not 'tts' in self.sim.graph[x][y]:
+                    self.sim.graph[x][y]['tts'] = []
+
+                self.sim.graph[x][y]['tts'].append(leg_duration)
+
                 leg_duration = 0
 
                 #print('Car %s has traversed %s->%s' % (self.id, x, y))

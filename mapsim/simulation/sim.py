@@ -2,7 +2,7 @@ import networkx as nx
 import numpy as np
 import simpy as simpy
 import time as time
-import logging, json
+import logging, json, collections
 from networkx.readwrite import json_graph as imports
 from datetime import datetime
 from mapsim.simulation.car import Car
@@ -57,8 +57,8 @@ class Sim:
 
     for i in range(self.num_cars):
 
-      wait = np.random.randint(0, self.sim_duration / 2)
-      #wait = 0
+      #wait = np.random.randint(0, self.sim_duration / 2)
+      wait = 0
       start = np.random.choice(self.graph.nodes())
       end = np.random.choice(self.graph.nodes())
       trips.append((wait, start, end))
