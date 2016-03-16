@@ -75,7 +75,7 @@ def draw_3d(G):
         ax.plot([x_1, x_2], [y_1, y_2], [z_1, z_2], color = color)
 
     # ax.plot(xs, ys, zs=zs, color='r')
-    plt.show()
-    #plt.savefig('test.pdf')
+    #plt.show()
+    plt.savefig('test.pdf')
 
 draw_3d(graph)
