@@ -24,16 +24,14 @@ data_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + args.d
 factory = GraphBuilder(config, tier=None)
 graph = factory.from_file(data_file_path, True)
 
-# factory2 = GraphBuilder(config)
-# H = factory2.from_file(data_file_path, True)
-
-#sim_data = factory.get_sim_data(True)
+numed = graph.number_of_edges()
+sim_data = factory.get_sim_data(True)
 
 # contract the graph
-# C = GraphContractor(config, graph)
-# C.order_nodes()
-# C.contract_graph()
-# C.set_flags()
+C = GraphContractor(config, graph)
+C.order_nodes()
+C.contract_graph()
+C.set_flags()
 
 # write graph to file
 out_file_name = args.saveas + '.graph' if args.saveas else args.data_file + '.graph'
@@ -45,51 +43,51 @@ f.write(json.dumps(data))
 f.close()
 
 # write sim data to file
-# out_file_name = args.saveas + '.sim' if args.saveas else args.data_file + '.sim'
-# out_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + out_file_name
+out_file_name = args.saveas + '.sim' if args.saveas else args.data_file + '.sim'
+out_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + out_file_name
 
-# f = open(out_file_path, 'wb')
-# f.write(pickle.dumps(sim_data))
-# f.close()
+f = open(out_file_path, 'wb')
+f.write(pickle.dumps(sim_data))
+f.close()
 
-nodes = []
-priorities = {}
-colors = []
-count = 0
+# nodes = []
+# priorities = {}
+# colors = []
+# count = 0
 
-plt.figure(num=None, figsize=(16, 12), dpi=300, facecolor='w', edgecolor='k')
+# plt.figure(num=None, figsize=(16, 12), dpi=300, facecolor='w', edgecolor='k')
 
-positions = {}
-for node in graph.nodes(data = True):
-    #print(node)
-    positions[node[0]] = (float(node[1]['lon']), float(node[1]['lat']))
+# positions = {}
+# for node in graph.nodes(data = True):
+#     #print(node)
+#     positions[node[0]] = (float(node[1]['lon']), float(node[1]['lat']))
 
-reg_edges = []
-up_edges = []
-down_edges = []
-for x, y, data in graph.edges(data = True):
-    if not 'dc' in data:
-      reg_edges.append((x, y))
-    else:
-      up_edges.append((x, y))
-    # if 'up' in data:
-    #     up_edges.append((x, y))
-    # if 'down' in data:
-    #     down_edges.append((x, y))
+# reg_edges = []
+# up_edges = []
+# down_edges = []
+# for x, y, data in graph.edges(data = True):
+#     if not 'dc' in data:
+#       reg_edges.append((x, y))
+#     else:
+#       up_edges.append((x, y))
+#     # if 'up' in data:
+#     #     up_edges.append((x, y))
+#     # if 'down' in data:
+#     #     down_edges.append((x, y))
 
-# for n, d in graph.nodes(data = True):
-#   if 'decision_node' in d:
-#     decision_nodes.append(n)
+# # for n, d in graph.nodes(data = True):
+# #   if 'decision_node' in d:
+# #     decision_nodes.append(n)
 
-nx.draw_networkx_nodes(graph, pos = positions, nodelist = graph.nodes(), node_color = 'c', linewidths = 0, node_size = 1.0, node_shape = 'o')
-edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = reg_edges, edge_color = 'w', width = 0.05, alpha = 1.0, arrows = True)
+# nx.draw_networkx_nodes(graph, pos = positions, nodelist = graph.nodes(), node_color = 'c', linewidths = 0, node_size = 1.0, node_shape = 'o')
+# edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = reg_edges, edge_color = 'w', width = 0.05, alpha = 1.0, arrows = True)
 
-edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = up_edges, edge_color = 'r', width = 0.05, alpha = 1.0, arrows = True)
-# edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = down_edges, edge_color = 'b', width = 0.05, alpha = 1.0, arrows = False)
+# edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = up_edges, edge_color = 'r', width = 0.05, alpha = 1.0, arrows = True)
+# # edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = down_edges, edge_color = 'b', width = 0.05, alpha = 1.0, arrows = False)
 
 
-plt.axis('on')
-plt.axes().set_aspect('equal', 'datalim')
-plt.axes().set_axis_bgcolor('black')
+# plt.axis('on')
+# plt.axes().set_aspect('equal', 'datalim')
+# plt.axes().set_axis_bgcolor('black')
 
-plt.savefig('test.pdf')
+# plt.savefig('test.pdf')

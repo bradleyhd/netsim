@@ -163,28 +163,38 @@ class GraphContractor(object):
                 total_search_size += search_size
                 total_num_shortcuts += len(sp_ends)
 
-        # compute the number of neighbors in the remaining graph
-        # if n is in the remaining graph or if v doesn't have a priority
-        # then everything is above it in the ordering
-
-        #v_priority = self.G.node[v]['priority']
-
-        # v will not be ranked whenever nodes are first ordered
-        # v will be ranked on any recalculation of priority
-        # v_has_priority = (v_priority != sys.maxsize)
-
+        #num_neighbors = len(list(self._predecessors(v, initialize))) + len(list(self._successors(v, initialize)))
         num_neighbors = len(neighbors)
-        #print('%s of pri %s has %s neighbors to calc' % (v, self.G.node[v]['priority'], num_neighbors))
-        # for n in nx.all_neighbors(self.G, v):
-        #     if self.G.node[n]['priority'] > v_priority or not v_has_priority:
-        #         num_neighbors += 1
 
-        # compute the edge difference
-        # edge difference = shortcuts - contractable "remaining" incident edges
-        # edge_diff = total_num_shortcuts - num_neighbors
+        bonus = 0
+        # for u, u_edge in self._predecessors(v, initialize):
+
+        #     if u_edge['is_shortcut']:
+        #         continue
+
+        #     if u_edge['highway'] in ['motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link']:
+        #         bonus += 1
+        #     elif u_edge['highway'] in ['secondary', 'secondary_link', 'tertiary', 'tertiary_link', 'road']:
+        #         bonus += 0.5
+        #     # else:
+        #     #     bonus -= 1
+
+        # for w, w_edge in self._successors(v, initialize):
+
+        #     if w_edge['is_shortcut']:
+        #         continue
+
+        #     if w_edge['highway'] in ['motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link']:
+        #         bonus += 1
+        #     elif w_edge['highway'] in ['secondary', 'secondary_link', 'tertiary', 'tertiary_link', 'road']:
+        #         bonus += 0.5
+        #     # else:
+        #     #     bonus -= 1
 
         # compute the priority
+        #priority = (total_num_shortcuts - num_neighbors) + total_search_size + (3 * self.G.node[v]['adj_count']) + bonus
         priority = (total_num_shortcuts - num_neighbors) + total_search_size + (3 * self.G.node[v]['adj_count'])
+        #priority = num_neighbors
 
         return priority
 

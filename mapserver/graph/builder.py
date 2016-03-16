@@ -232,96 +232,7 @@ class GraphBuilder(object):
                 count += 1
 
         self.__log.info('Decision nodes: %s' % (count))
-        timer.stop()
-
-    # def __decision_graph(self):
-
-    #     timer = Timer(__name__)
-    #     timer.start('Computing decision graph...')
-
-    #     G = self.graph.copy()
-    #     self.decision_map = {}
-    #     ttt_map = {}
-
-    #     for s in G.nodes():
-
-    #         #print('---NODE %s ---' % (s))
-
-    #         ts = list([t for t in G[s]])
-    #         for t in ts:
-
-    #             #print('Neighbor: %s' % (t))
-    #             u = s
-    #             v = t
-
-    #             # trace the path
-    #             path = [(s, t)]
-    #             ttt = G[s][t]['ttt']
-    #             props = G[s][t].copy()
-
-    #             #print('Collapsing path starting with %s->%s' % (s, t))
-
-    #             while True:
-
-    #                 way_ids = set([e['osm_way_id'] for e in G[v].values()])
-    #                 #print('Ways %s->=%s' % (v, way_ids))
-
-    #                 # if v is not a decision node
-    #                 if len(way_ids) == 1:
-
-    #                     ws = [w for w in G[v].keys() if w != u and w != t]
-    #                     #print('u: %s v: %s ws: %s' % (u, v, ws))    
-
-    #                     if len(ws) != 1:
-    #                         break
-
-    #                     w = ws[0]
-    #                     path.append((v, w))
-    #                     ttt += G[v][w]['ttt']
-
-    #                     u = v
-    #                     v = w
-
-    #                 else:
-    #                     break
-
-    #             if len(path) > 1:
-
-    #                 path2 = []
-    #                 for i in range(len(path)):
-    #                     a, b = path[i]
-    #                     G.remove_edge(a, b)
-
-    #                     if (a, b) in self.decision_map:
-    #                         path2.extend(self.decision_map[a, b])
-    #                     else:
-    #                         path2.append((a, b))
-                
-    #                 a = path[0][0]
-    #                 b = path[-1][1]
-
-    #                 print('%s->%s: ttt: %s' % (a, b, ttt))
-    #                 print(path2)
-    #                 if (a, b) not in self.decision_map or ttt < ttt_map[(a, b)]:
- 
-    #                     print('setting/overriding')
-    #                     props['ttt'] = ttt
-    #                     props['real_ttt'] = ttt
-    #                     props['default_ttt'] = ttt
-    #                     props['dc'] = True
-
-
-
-    #                     G.add_edge(a, b, **props)
-    #                     print()
-    #                     self.decision_map[(a, b)] = path2
-    #                     ttt_map[(a, b)] = ttt
-
-    #     self.__log.info('Nodes: %s Edges: %s' % ('{:,}'.format(G.number_of_nodes()), '{:,}'.format(G.number_of_edges())))
-
-    #     self.decision_graph = G
-
-    #     return G
+        timer.stop()   
 
     def __decision_graph(self):
 
@@ -478,7 +389,7 @@ class GraphBuilder(object):
     def get_sim_data(self, decision_graph=False):
 
         sim_data = {
-            'segments': self.__compute_segments()
+            'segments': None #self.__compute_segments()
         }
 
         if decision_graph:
