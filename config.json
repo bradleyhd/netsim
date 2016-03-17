@@ -1,16 +1,21 @@
 {
-    "num_cars": 1000,
-    "cars_per_min": 100000,
-    "sim_duration": 500000,
+    "num_cars": 2,
+    "cars_per_min": 1,
+    "sim_duration": 120,
     "num_bottlenecks": 20,
     "bottleneck_factor": 30,
     "realtime": false,
     "realtime_factor": 10,
-    "signals": true,
+    "signals": false,
     "green_light": 30000,
     "yellow_light": 5000,
     "speed_variation_kmh": 2,
     "graph_update_frequency": 5,
+
+    "cell_length_m": 5,
+    "speed_stdev_m/s": 2,
+    "acceleration_m/s^2": 3.8,
+
 
     "decision_graph": true,
     "fast_contract": true,
@@ -24,54 +29,65 @@
         "real_arc": true,
         "is_shortcut": false
     },
-    "road_segment_length_km": 0.005, 
     "road_parameters": {
         "motorway": {
+            "ffs_m/s": 30.56,
             "ffs_kph": 110,
             "lanes": 3
         },
         "trunk": {
             "ffs_kph": 90,
+            "ffs_m/s": 25.0,
             "lanes": 3
         },
         "primary": {
             "ffs_kph": 80,
+            "ffs_m/s": 22.22,
             "lanes": 2
         },
         "secondary": {
             "ffs_kph": 65,
+            "ffs_m/s": 18.06,
             "lanes": 2
         },
         "tertiary": {
             "ffs_kph": 55,
+            "ffs_m/s": 15.28,
             "lanes": 1
         },
         "road": {
             "ffs_kph": 45,
+            "ffs_m/s": 12.5,
             "lanes": 1
         },
         "residential": {
             "ffs_kph": 45,
+            "ffs_m/s": 12.5,
             "lanes": 1
         },
         "motorway_link": {
             "ffs_kph": 80,
+            "ffs_m/s": 22.22,
             "lanes": 1
         },
         "trunk_link": {
             "ffs_kph": 70,
+            "ffs_m/s": 19.44,
             "lanes": 1
         },
         "primary_link": {
             "ffs_kph": 50,
+            "ffs_m/s": 13.89,
             "lanes": 1
         },
         "secondary_link": {
             "ffs_kph": 40,
+            "ffs_m/s": 11.11,
             "lanes": 1
         },
         "tertiary_link": {
             "ffs_kph": 30,
+            "ffs_m/s": 8.333,
             "lanes": 1
         }
     }

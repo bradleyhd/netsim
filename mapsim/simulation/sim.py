@@ -5,7 +5,7 @@ import time as time
 import logging, json, collections, requests
 from networkx.readwrite import json_graph as imports
 from datetime import datetime
-from mapsim.simulation.car import Car
+from mapsim.simulation.car2 import Car
 from mapsim.simulation.signal import Signal
 
 class Sim:
@@ -13,10 +13,10 @@ class Sim:
   def __init__(self, config, buckets):
 
     self.__log = logging.getLogger(__name__)
-    self.__config = config
+    self._config = config
 
     # load graph from file
-    file_path = self.__config['graph_file']
+    file_path = self._config['graph_file']
     self.__log.debug('Loading graph from %s...' % (file_path))
     
     with open(file_path, 'r') as file:
@@ -27,8 +27,8 @@ class Sim:
     self.__log.debug('Graph loaded successfully.')
     self.__log.debug('Initializing simulation...')
 
-    self.num_cars = self.__config['num_cars']
-    self.sim_duration = self.__config['sim_duration']
+    self.num_cars = self._config['num_cars']
+    self.sim_duration = self._config['sim_duration']
 
     self.bottlenecks = self.__generate_bottlenecks()
     # self.trips = self.__generate_trips()
@@ -42,10 +42,10 @@ class Sim:
     self.__log.debug('Adding bottlenecks...')
     bottlenecks = {}
 
-    for i in range(self.__config['num_bottlenecks']):
+    for i in range(self._config['num_bottlenecks']):
 
       start = np.random.choice(self.graph.nodes())
-      bottlenecks[start] = self.__config['bottleneck_factor']
+      bottlenecks[start] = self._config['bottleneck_factor']
 
     return bottlenecks
 
@@ -127,7 +127,7 @@ class Sim:
     res = requests.get('http://localhost:5000/routes/generate/%d' % (self.num_cars))
     routes = res.json()
 
-    delay_window = (self.num_cars * 60000) / self.__config['cars_per_min']
+    delay_window = (self.num_cars * 60000) / self._config['cars_per_min']
     for i in range(0, self.num_cars):
 
       wait = np.random.randint(0, delay_window)
@@ -143,7 +143,7 @@ class Sim:
       for car in self.cars:
         car.log_location()
 
-      yield self.env.timeout(1000)
+      yield self.env.timeout(0.5)
 
   def setup(self, adaptive=False):
     """Prepares a simulation for use before a run"""
@@ -155,19 +155,19 @@ class Sim:
 
     self.cars = self.__add_cars()
 
-    if self.__config['signals']:
+    if self._config['signals']:
       self.signals, self.signal_map = self.__add_signals()
 
     # decide whether to do a realtime simulation
-    if self.__config['realtime']:
-      self.env = simpy.RealtimeEnvironment(factor=self.__config['realtime_factor'], strict=True)
+    if self._config['realtime']:
+      self.env = simpy.RealtimeEnvironment(factor=self._config['realtime_factor'], strict=True)
     else:
       self.env = simpy.Environment()
 
     for car in self.cars:
       self.env.process(car.run())
 
-    if self.__config['signals']:
+    if self._config['signals']:
       for signal in self.signals:
         self.env.process(signal.run())
 

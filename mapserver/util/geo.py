@@ -16,7 +16,7 @@ def calc_bearing(lon1, lat1, lon2, lat2):
 
     return bn
 
-def estimate_location(lon1, lat1, lon2, lat2, dist_km):
+def estimate_location(lon1, lat1, lon2, lat2, dist_m):
 
     #print('--')
     #print('estimating location %f %f -> %f %f at %f km' % (lon1, lat1, lon2, lat2, dist_km))
@@ -25,7 +25,7 @@ def estimate_location(lon1, lat1, lon2, lat2, dist_km):
     #print('got bearing %d' % bearing)
 
     origin = Point(lat2, lon2)
-    dest = VincentyDistance(kilometers=dist_km).destination(origin, bearing)
+    dest = VincentyDistance(meters=dist_m).destination(origin, bearing)
 
     #print('estimated location: %f %f' % (dest.longitude, dest.latitude))
     return (dest.longitude, dest.latitude)

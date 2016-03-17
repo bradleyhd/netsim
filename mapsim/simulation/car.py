@@ -122,6 +122,10 @@ class Car(object):
         to_arc['buckets'][to_cell] += 1;
         # print('incrementing (%d, %d)=%d' % (to_leg, to_cell, to_arc['buckets'][to_cell]))
 
+        # if from_leg > -1 and from_cell > -1:
+        #     if self.graph[from_x][from_y]['lanes'] != self.graph[to_x][to_y]['lanes']:
+        #         print('%s->%s' % (self.graph[from_x][from_y]['lanes'], self.graph[to_x][to_y]['lanes']))
+
         # calculate the time spent driving in this cell
         # normally randomize speed by +/- 2 km/h
         ffs = to_arc['ffs']

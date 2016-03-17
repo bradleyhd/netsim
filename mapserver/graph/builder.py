@@ -2,6 +2,7 @@ import logging, datetime, sys
 import xml.parsers.expat
 import networkx as nx
 import itertools
+from geopy.distance import VincentyDistance
 from geopy.distance import great_circle
 from mapserver.util.geo import estimate_location
 from networkx.readwrite import json_graph
@@ -17,7 +18,6 @@ class GraphBuilder(object):
 
         self.__config = config;
         self._road_parameters = config['road_parameters'];
-        self._road_segment_length_km = config['road_segment_length_km']
         self._default_node_attrs = config['default_node_attrs'];
         self._default_node_attrs['priority'] = sys.maxsize
         self._default_edge_attrs = config['default_edge_attrs'];
@@ -143,7 +143,7 @@ class GraphBuilder(object):
                         self.graph.add_edge(n2, n1, **props)
 
     def __calc_ttt(self, n1, n2, edge_tags):
-        '''calculates the time to traverse (TTT) an edge of the graph in millisconds'''
+        '''calculates the time to traverse (TTT) an edge of the graph in seconds'''
 
         # retrieve node data
         start_node = self.graph.node[n1]
@@ -155,20 +155,15 @@ class GraphBuilder(object):
         end_coord = (end_node['lat'], end_node['lon'])
 
         # calculate distance with geopy
-        # vincenty is good, but slow, and has convergence problems
-        # great circle is a lot faster and accurate enough (for now)
-        dist_km = great_circle(start_coord, end_coord).kilometers
-        edge_tags['length'] = dist_km
+        length = VincentyDistance(start_coord, end_coord).meters
+        edge_tags['length'] = length
 
         # assume speeds based on highway classification
-        ffs = self._road_parameters[edge_tags['highway']]['ffs_kph']
+        ffs = self._road_parameters[edge_tags['highway']]['ffs_m/s']
         edge_tags['ffs'] = ffs
 
-        # calculate estimated time to traverse in milliseconds
-        # millisecond resolution means many more steps for simulations,
-        # but also mean that rounding errors are only made here and not
-        # inside of a bidirectional dijkstra algorithm
-        ttt = int((dist_km / ffs) * 60 * 60 * 1000)
+        # time to traverse in seconds (m * s/m = s)
+        ttt = length / ffs
 
         edge_tags['ttt'] = ttt
         edge_tags['real_ttt'] = ttt
@@ -370,9 +365,10 @@ class GraphBuilder(object):
             start_node = self.graph.node[x]
             end_node = self.graph.node[y]
 
-            dist_km = e['length']
-            num_buckets = int(dist_km / self._road_segment_length_km)
-            num_lanes = self._road_parameters[e['highway']]['lanes']
+            length = e['length'] # in meters
+            cell_length = self.__config['cell_length_m']
+            num_buckets = int(length / cell_length)
+            num_lanes = 1 #self._road_parameters[e['highway']]['lanes']
 
             if x not in segments:
                 segments[x] = {}
@@ -389,7 +385,7 @@ class GraphBuilder(object):
                 (lon, lat) = estimate_location(
                     end_node['lon'], end_node['lat'],
                     start_node['lon'], start_node['lat'],
-                    (i * self._road_segment_length_km) + self._road_segment_length_km / 2)
+                    (i * cell_length) + cell_length / 2)
                 segments[x][y]['bucket_locations'][i] = (lon, lat)
 
         timer.stop()
