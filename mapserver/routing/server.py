@@ -76,8 +76,8 @@ class Server():
 
     x = np.random.choice(self.base_graph, n)
     y = np.random.choice(self.base_graph, n)
-    x = [6793] * n
-    y = [3535] * n
+    # x = [6793] * n
+    # y = [3535] * n
 
     routes = []
     for i in range(n):

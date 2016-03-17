@@ -127,7 +127,7 @@ class Sim:
     res = requests.get('http://localhost:5000/routes/generate/%d' % (self.num_cars))
     routes = res.json()
 
-    delay_window = (self.num_cars * 60000) / self._config['cars_per_min']
+    delay_window = (self.num_cars * 60) / self._config['cars_per_min']
     for i in range(0, self.num_cars):
 
       wait = np.random.randint(0, delay_window)
@@ -143,7 +143,7 @@ class Sim:
       for car in self.cars:
         car.log_location()
 
-      yield self.env.timeout(0.5)
+      yield self.env.timeout(1)
 
   def setup(self, adaptive=False):
     """Prepares a simulation for use before a run"""

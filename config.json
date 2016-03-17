@@ -1,7 +1,7 @@
 {
-    "num_cars": 50,
-    "cars_per_min": 1,
-    "sim_duration": 120,
+    "num_cars": 1000,
+    "cars_per_min": 500,
+    "sim_duration": 600,
     "num_bottlenecks": 20,
     "bottleneck_factor": 30,
     "realtime": false,
@@ -9,12 +9,12 @@
     "signals": false,
     "green_light": 30000,
     "yellow_light": 5000,
-    "speed_variation_kmh": 2,
     "graph_update_frequency": 5,
 
     "cell_length_m": 5,
-    "speed_stdev_m/s": 2,
+    "speed_stdev_m/s": 1,
     "acceleration_m/s^2": 3.8,
+    "driver_reaction_time_s": 0.2,
 
 
     "decision_graph": true,
