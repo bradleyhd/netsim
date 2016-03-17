@@ -263,7 +263,7 @@ class Car(object):
                     return clear
                 else:
                     clear += 1
-                    if clear == distance:
+                    if clear > distance:
                         return clear
 
         return clear
@@ -297,8 +297,8 @@ class Car(object):
         #wait = np.random.randint(0, self.sim_length / 4)
         #yield self.sim.env.timeout(self.delay)
 
-        if self.id == 1:
-            yield self.sim.env.timeout(10)
+        # if self.id == 1:
+        #     yield self.sim.env.timeout(10)
 
         from_leg = -1
         from_cell = -1
@@ -311,25 +311,27 @@ class Car(object):
         i = 0
         while True:
 
+            print('----------')
             print('Car %s attempting %s:%s->%s:%s' % (self.id, from_leg, from_cell, to_leg, to_cell))
 
-            target_headway = 5
+            target_headway = int(self.current_speed / 5)
             headway = self.__look(to_leg, to_cell, target_headway)
+            print('Current speed: %s' % self.current_speed)
+            print('Target Headway: %s' % target_headway)
             print('Headway: %s' % (headway))
 
+            # get current cells
+            (from_x, from_y) = self.trip[from_leg]
+            from_arc = self.sim.buckets[from_x][from_y]
+
             # if there's headway, accelerate or maintain speed
-            if headway == target_headway:
-
-                print('moving')
-
-                # get current cells
-                (from_x, from_y) = self.trip[from_leg]
-                from_arc = self.sim.buckets[from_x][from_y]
+            if headway > target_headway:
 
                 ffs = from_arc['ffs']
-                target_speed = ffs #+ self.target_speed_adjustment
-                if self.id == 1:
-                    target_speed = 70
+                target_speed = ffs + self.target_speed_adjustment
+                # if self.id == 1:
+                #     target_speed = 40
+
                 #acceleration = self.sim._config['acceleration_m/s^2']
                 # distance = self.sim._config['cell_length_m']
 
@@ -339,8 +341,7 @@ class Car(object):
                 # if car reaches target speed this segment
                 if final_speed >= target_speed:
 
-                    if self.id == 0:
-                        yield self.sim.env.timeout(10)
+                    print('Reached Target Speed')
 
                     # solve for distance at which it hits top speed
                     x = (target_speed ** 2 - self.current_speed ** 2)/(2 * acceleration)
@@ -354,8 +355,13 @@ class Car(object):
 
                     final_speed = target_speed
 
+                    # if self.id == 0 and self.sim.env.now >= 30:
+                    #     print('doubling')
+                    #     t *= 2
+
                 else:
 
+                    print('Accelerating Speed')
                     # solve for time to reach this speed
                     t = (2 * distance) / (self.current_speed + final_speed)
 
@@ -380,7 +386,46 @@ class Car(object):
                 to_cell += 1
 
                 # sleep in position
-                print(t)
+                print('Final Speed: %s' % final_speed)
+                print('Drive %ss' % t)
+                yield self.sim.env.timeout(t)
+
+                if to_cell >= len(to_arc['buckets']):
+                    to_leg += 1
+                    to_cell = 0
+
+                if to_leg > len(self.trip):
+                    return
+
+            elif headway == target_headway:
+
+                if self.current_speed == 0 or headway == 0:
+                    yield self.sim.env.timeout(0.2)
+                    continue
+
+                print('Maintaining Speed')
+                t = distance / self.current_speed
+
+                # car has moved, update the cells
+                from_arc['buckets'][from_cell] -= 1;
+
+                (to_x, to_y) = self.trip[to_leg]
+                to_arc = self.sim.buckets[to_x][to_y]
+                to_arc['buckets'][to_cell] += 1;
+
+                # update positions
+                from_leg = to_leg
+                from_cell = to_cell
+
+                # save position for location logging
+                self.leg = to_leg
+                self.cell = to_cell
+
+                # increment cell
+                to_cell += 1
+
+                print('Drive %ss' % t)
+
                 yield self.sim.env.timeout(t)
 
                 if to_cell >= len(to_arc['buckets']):
@@ -397,11 +442,13 @@ class Car(object):
                     yield self.sim.env.timeout(0.2)
                     continue
 
+                print('Decelerating')
+
                 # linear
                 #final_speed = self.current_speed - (self.current_speed / target_headway)
 
                 # logarithmic
-                print('current: %s' % self.current_speed)
+
                 c = self.current_speed / np.log(target_headway)
                 #print('fn: %s * ln(%s) = %s' % (c, headway, c * np.log(headway)))
 
@@ -413,12 +460,14 @@ class Car(object):
 
                 # (vf^2-v^2)/(2x)=a
                 deceleration = (final_speed ** 2 - self.current_speed ** 2)/(2 * distance)
-                print('final: %s, dec: %s' % (final_speed, deceleration))
 
                 # t = (vf - v)/a
                 t = (final_speed - self.current_speed) / deceleration
 
                 self.current_speed = final_speed
+
+                print('Final Speed: %s' % final_speed)
+                print('Drive %ss' % t)
 
                 # car has moved, update the cells
                 from_arc['buckets'][from_cell] -= 1;
