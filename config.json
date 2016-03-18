@@ -1,21 +1,26 @@
 {
-    "num_cars": 1000,
-    "cars_per_min": 500,
-    "sim_duration": 600,
+    "num_cars": 200,
+    "cars_per_min": 100,
+    "sim_duration": 180,
     "num_bottlenecks": 20,
     "bottleneck_factor": 30,
     "realtime": false,
     "realtime_factor": 10,
-    "signals": false,
-    "green_light": 30000,
-    "yellow_light": 5000,
     "graph_update_frequency": 5,
+
+    "enable_location_history": true,
+    "location_history_poll_s": 0.25,
 
     "cell_length_m": 5,
     "speed_stdev_m/s": 1,
     "acceleration_m/s^2": 3.8,
     "driver_reaction_time_s": 0.2,
-
+    
+    "enable_signals": true,
+    "green_light_s": 20,
+    "yellow_light_s": 5,
+    "enable_extended_green": true,
+    "max_extended_green_light_s": 60,
 
     "decision_graph": true,
     "fast_contract": true,

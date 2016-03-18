@@ -1,62 +1,57 @@
 class Signal(object):
 
-    YELLOW_LIGHT_MS = 5000
-    GREEN_LIGHT_MS = 30000
-
     def __init__(self, sim, graph):
       self.sim = sim
       self.graph = graph
-      self.rotation = []
+      self.__rotations = []
       self.arcs = {}
+      self.__green = {}
 
     def run(self):
 
-      go_idx = 0
-
-      # print(self.rotation)
+      green_rotation_idx = 0
 
       while True:
 
-        if go_idx >= len(self.rotation):
-          go_idx = 0
+        if green_rotation_idx >= len(self.__rotations):
+          green_rotation_idx = 0
 
-        #print('---\nlights changed at %s' % (id(self)))
+        for x, y in self.__arcs():
+          if (x, y) in self.__rotations[green_rotation_idx]:
+            self.__set_green(x, y)
 
-        for set in range(len(self.rotation)):
-          for x, y in self.rotation[set]:
-            if set == go_idx:
-              self.arcs[(x, y)]['can_go'] = True
-              #print('%s go' % self.arcs[(x, y)].get('name', 'none'))
-            else:
-              self.arcs[(x, y)]['can_go'] = False
-              #print('%s NO go' % self.arcs[(x, y)].get('name', 'none'))
-       
-        # print(self.rotation)
-        # print(self.arcs)
-        yield self.sim.env.timeout(self.GREEN_LIGHT_MS)
-        go_idx += 1
-        yield self.sim.env.timeout(self.YELLOW_LIGHT_MS)
+        yield self.sim.env.timeout(self.sim._config['green_light_s'])
 
-      # print(self.arcs)
+        self.__set_all_red()
+        yield self.sim.env.timeout(self.sim._config['yellow_light_s'])
+        green_rotation_idx += 1
 
-    #@profile
-    def canGo(self, x, y):
+    def __arcs(self):
 
-      try:
-        return True if self.arcs[(x, y)]['can_go'] else False
-      except KeyError:
-        return True
-      # arc = self.arcs.get((x, y), None)
-      # if (arc):
-      #   return arc['can_go']
-      # else:
-      #   return True
+      for set in range(len(self.__rotations)):
+        for x, y in self.__rotations[set]:
+          yield (x, y)
 
-      #return Ture
+    def __set_green(self, x, y):
+
+      self.__green[(x, y)] = True
+
+      if self.sim.buckets[x][y]['buckets'][-1] > 0:
+        self.sim.buckets[x][y]['buckets'][-1] -= 1
+
+    def __set_red(self, x, y):
+
+      self.__green[(x, y)] = False
+      self.sim.buckets[x][y]['buckets'][-1] += 1
+
+    def __set_all_red(self):
+
+      for x, y in self.__arcs():
+        if self.__green[(x, y)] == True:
+          self.__green[(x, y)] = False
+          self.sim.buckets[x][y]['buckets'][-1] += 1
 
     def addInboundArc(self, x, y):
-
-
 
       this_id = self.graph[x][y]['osm_way_id']
       this_name = self.graph[x][y].get('name', '')
@@ -66,17 +61,16 @@ class Signal(object):
 
         if other['id'] == this_id or other['name'] == this_name:
           this_rot = other['rotation']
-          self.rotation[this_rot].append((x, y))
+          self.__rotations[this_rot].append((x, y))
 
       if this_rot == -1:
-        self.rotation.append([(x, y)])
-        this_rot = len(self.rotation) - 1
+        self.__rotations.append([(x, y)])
+        this_rot = len(self.__rotations) - 1
+
+      self.__set_red(x, y)
           
       self.arcs[(x, y)] = {
         'id': self.graph[x][y]['osm_way_id'],
         'name': self.graph[x][y].get('name', ''),
         'rotation': this_rot,
-        'can_go': False,
       }
-      
-    

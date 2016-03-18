@@ -143,7 +143,7 @@ class Sim:
       for car in self.cars:
         car.log_location()
 
-      yield self.env.timeout(1)
+      yield self.env.timeout(self._config['location_history_poll_s'])
 
   def setup(self, adaptive=False):
     """Prepares a simulation for use before a run"""
@@ -155,7 +155,7 @@ class Sim:
 
     self.cars = self.__add_cars()
 
-    if self._config['signals']:
+    if self._config['enable_signals']:
       self.signals, self.signal_map = self.__add_signals()
 
     # decide whether to do a realtime simulation
@@ -167,11 +167,12 @@ class Sim:
     for car in self.cars:
       self.env.process(car.run())
 
-    if self._config['signals']:
+    if self._config['enable_signals']:
       for signal in self.signals:
         self.env.process(signal.run())
 
-    self.env.process(self.location_watcher())
+    if self._config['enable_location_history']:
+      self.env.process(self.location_watcher())
 
   def run(self):
     """Runs the simulation"""
