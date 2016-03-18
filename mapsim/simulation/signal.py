@@ -16,14 +16,45 @@ class Signal(object):
         if green_rotation_idx >= len(self.__rotations):
           green_rotation_idx = 0
 
+        # for each arc in this rotation, set it to green
         for x, y in self.__arcs():
           if (x, y) in self.__rotations[green_rotation_idx]:
             self.__set_green(x, y)
 
+        # start running green light
         yield self.sim.env.timeout(self.sim._config['green_light_s'])
 
+        if self.sim._config['enable_extended_green']:
+
+          # green time left = max green time - min green time
+          green_time_left = self.sim._config['max_extended_green_light_s'] - self.sim._config['green_light_s']
+
+          # while green time left
+          while(green_time_left > 0):
+
+            empty = True
+            
+            # for each arc in this rotation
+            for x, y in self.__arcs():
+
+              # if there's someone at the end of the arc
+              if (x, y) in self.__rotations[green_rotation_idx] and self.sim.buckets[x][y]['buckets'][-1] > 0:
+                empty = False
+                break
+
+            if empty:
+              break
+            else:
+              # wait another second
+              green_time_left -= 1
+              yield self.sim.env.timeout(1)
+
+        # set all arcs to red
         self.__set_all_red()
+
+        # let cars in intersection go during yellow light
         yield self.sim.env.timeout(self.sim._config['yellow_light_s'])
+
         green_rotation_idx += 1
 
     def __arcs(self):
