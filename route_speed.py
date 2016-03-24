@@ -4,7 +4,7 @@ import networkx as nx
 import numpy as np
 
 from mapserver.graph.builder import GraphBuilder
-from mapserver.graph.contractor import GraphContractor
+from mapserver.graph.contractor2 import GraphContractor
 from networkx.readwrite import json_graph
 from mapserver.routing.router import Router
 
@@ -16,8 +16,8 @@ with open('config.json', 'r') as file:
 
 files = [
   # 'natchez',
-  'battleground',
-  # 'north_gso',
+  # 'battleground',
+  'north_gso',
   # 'mid_gso',
   # 'greensboro',
   # 'guilford',
@@ -33,7 +33,7 @@ for f in files:
 
   data_file_path = 'data/%s.osm' % f
 
-  config['use_fast_contract'] = True
+  config['use_fast_contract'] = False
 
   # build the graph
   factory = GraphBuilder(config)
@@ -67,34 +67,34 @@ for f in files:
 
   count += 1
 
-  #--------
+  # --------
 
-  # config['use_fast_contract'] = True
+  config['use_fast_contract'] = True
 
-  # # contract the graph
-  # C = GraphContractor(config, graph2)
+  # contract the graph
+  C = GraphContractor(config, graph2)
 
-  # C.order_nodes()
-  # C.contract_graph()
-  # C.set_flags()
+  C.order_nodes()
+  C.contract_graph()
+  C.set_flags()
 
-  # # route
-  # router = Router(graph2)
+  # route
+  router = Router(graph2)
 
-  # times = []
+  times = []
 
-  # for x in range(0, trips):
+  for x in range(0, trips):
 
-  #   (start_node, end_node) = coords[x]
-  #   start = time.perf_counter()
-  #   router.route(start_node, end_node)
-  #   end = time.perf_counter() - start
-  #   times.append(end)
+    (start_node, end_node) = coords[x]
+    start = time.perf_counter()
+    router.route(start_node, end_node)
+    end = time.perf_counter() - start
+    times.append(end)
 
-  # number_of_nodes[1].append(graph2.number_of_nodes())
-  # route_times[1].append(np.median(times))
+  number_of_nodes[1].append(graph2.number_of_nodes())
+  route_times[1].append(np.median(times))
 
-  # count += 1
+  count += 1
 
 
   print(number_of_nodes)

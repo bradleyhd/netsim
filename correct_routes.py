@@ -3,7 +3,7 @@ import numpy as np
 import argparse, json, random, time, pickle
 
 from mapserver.graph.builder import GraphBuilder
-from mapserver.graph.contractor import GraphContractor
+from mapserver.graph.contractor2 import GraphContractor
 from networkx.readwrite import json_graph
 from mapserver.routing.router2 import Router
 from mapserver.util.timer import Timer

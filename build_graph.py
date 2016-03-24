@@ -3,7 +3,7 @@ import os.path
 import networkx as nx
 
 from mapserver.graph.builder import GraphBuilder
-from mapserver.graph.contractor import GraphContractor
+from mapserver.graph.contractor2 import GraphContractor
 from networkx.readwrite import json_graph
 
 import matplotlib.pyplot as plt
@@ -22,8 +22,8 @@ data_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + args.d
 
 # build the graph
 factory = GraphBuilder(config)
-graph, decision_graph = factory.from_file(data_file_path, config['use_decision_graph'])
-sim_data = factory.get_sim_data()
+graph = factory.from_file(data_file_path, False)
+#sim_data = factory.get_sim_data()
 
 decision_graph = graph.copy()
 
@@ -31,30 +31,30 @@ decision_graph = graph.copy()
 C = GraphContractor(config, decision_graph)
 C.order_nodes()
 C.contract_graph()
-C.set_flags()
+# C.set_flags()
 
 # write regular graph to file
-out_file_name = args.saveas + '.graph' if args.saveas else args.data_file + '.graph'
-out_file_path = 'data/' + out_file_name
-f = open(out_file_path, 'w')
-data = json_graph.node_link_data(graph)
-f.write(json.dumps(data))
-f.close()
+# out_file_name = args.saveas + '.graph' if args.saveas else args.data_file + '.graph'
+# out_file_path = 'data/' + out_file_name
+# f = open(out_file_path, 'w')
+# data = json_graph.node_link_data(graph)
+# f.write(json.dumps(data))
+# f.close()
 
-# write decision graph to file
-out_file_name = args.saveas + '.decision.graph' if args.saveas else args.data_file + '.decision.graph'
-out_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + out_file_name
-f = open(out_file_path, 'w')
-data = json_graph.node_link_data(decision_graph)
-f.write(json.dumps(data))
-f.close()
+# # write decision graph to file
+# out_file_name = args.saveas + '.decision.graph' if args.saveas else args.data_file + '.decision.graph'
+# out_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + out_file_name
+# f = open(out_file_path, 'w')
+# data = json_graph.node_link_data(decision_graph)
+# f.write(json.dumps(data))
+# f.close()
 
-# write sim data to file
-out_file_name = args.saveas + '.sim' if args.saveas else args.data_file + '.sim'
-out_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + out_file_name
-f = open(out_file_path, 'wb')
-f.write(pickle.dumps(sim_data))
-f.close()
+# # write sim data to file
+# out_file_name = args.saveas + '.sim' if args.saveas else args.data_file + '.sim'
+# out_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + out_file_name
+# f = open(out_file_path, 'wb')
+# f.write(pickle.dumps(sim_data))
+# f.close()
 
 # nodes = []
 # priorities = {}

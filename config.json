@@ -10,6 +10,8 @@
 
     "use_decision_graph": true,
     "use_fast_contract": true,
+    "enable_lazy_updates": true,
+    "lazy_update_interval": 50,
     "adaptive_routing": true,
     "adaptive_routing_updates_s": 10,
     "graph_update_s": 15,
