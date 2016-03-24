@@ -8,7 +8,7 @@
     "realtime": false,
     "realtime_factor": 10,
 
-    "use_decision_graph": false,
+    "use_decision_graph": true,
     "use_fast_contract": false,
     "adaptive_routing": true,
     "adaptive_routing_updates_s": 10,

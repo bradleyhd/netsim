@@ -172,10 +172,11 @@ class GraphContractor(object):
         num_neighbors = len(neighbors)
 
         # compute the priority
-        priority = (total_num_shortcuts - num_neighbors) + (1 * self.G.node[v]['adj_count']) + total_search_size 
+        priority = (total_num_shortcuts - num_neighbors) + (3 * self.G.node[v]['adj_count']) + total_search_size 
 
         return priority
 
+    #@profile
     def order_nodes(self):
 
         self._node_priority_pq = PriorityQueue()
@@ -183,7 +184,8 @@ class GraphContractor(object):
         timer = Timer(__name__)
         timer.start('Ordering nodes...')
 
-        for v in self.G.nodes():
+
+        for v in self.G.nodes_iter():
 
             priority = self._calc_node_priority(v)
             self._node_priority_pq.push(priority, v)
@@ -269,13 +271,20 @@ class GraphContractor(object):
             except KeyError as e:
                 break
 
+            # lazy updates
+            # new_priority = self._calc_node_priority(v)
+            # if new_priority > self._node_priority_pq.min_val():
+            #     print('waste')
+            #     self._node_priority_pq.push(new_priority, v)
+            #     continue
+
             if initialize:
                 self.G.node[v]['priority'] = count
                 v_priority = count
 
             #print('%s: %s nodes left' % (v, self.G.number_of_nodes() - count))
 
-            if count % 1000 == 0:
+            if count % 100 == 0:
                 self.__log.debug('%.4f%%' % ((count / self.num_nodes) * 100))
 
             #if count % 1000 == 0:
