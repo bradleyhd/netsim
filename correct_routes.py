@@ -5,7 +5,7 @@ import argparse, json, random, time, pickle
 from mapserver.graph.builder import GraphBuilder
 from mapserver.graph.contractor import GraphContractor
 from networkx.readwrite import json_graph
-from mapserver.routing.router import Router
+from mapserver.routing.router2 import Router
 from mapserver.util.timer import Timer
 
 import matplotlib
@@ -42,20 +42,21 @@ with open('data/%s.graph' % args.data_file, 'r') as file:
     data = json.load(file)
     H = json_graph.node_link_graph(data)
 
-router = Router(G, decision_map=sim_data['decision_route_map'])
+#router = Router(G, decision_map=sim_data['decision_route_map'])
+router = Router(G)
 
-broken = []
-for (x, y), path in sim_data['decision_route_map'].items():
+# broken = []
+# for (x, y), path in sim_data['decision_route_map'].items():
 
-    length = 0
-    for (u, v) in path:
-        length += H[u][v]['ttt']
+#     length = 0
+#     for (u, v) in path:
+#         length += H[u][v]['ttt']
 
-    if x in G and y in G[x]:
-        if length != G[x][y]['ttt']:
-            broken.append((x, y))
-            print('path: %s scut %s' % (length, G[x][y]['ttt']))
-            print(path)
+#     if x in G and y in G[x]:
+#         if length != G[x][y]['ttt']:
+#             broken.append((x, y))
+#             # print('path: %s scut %s' % (length, G[x][y]['ttt']))
+#             # print(path)
 
 count = 0
 check_path = []

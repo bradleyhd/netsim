@@ -3,6 +3,7 @@ import sys, random
 
 from mapserver.util.pq import PriorityQueue
 from mapserver.util.timer import Timer
+from heapq import heappush, heappop
 
 class Router():
 
@@ -86,25 +87,21 @@ class Router():
     #@profile
     def _bidirectional_dijkstra(self, start_node, end_node):
 
-        self.short_path = []
-        self.touch_path_fwd = []
-        self.touch_path_bwd = []
-
         # r = 0 for forward search, 1 for backward search
         r = 1
 
-        # reset queues
-        self._forward_pq = PriorityQueue()
-        self._backward_pq = PriorityQueue()
+        forward_pq = []
+        backward_pq = []
+        neighbors = self._neighbors
 
         # set up queues
-        qs = [self._forward_pq, self._backward_pq]
+        qs = [forward_pq, backward_pq]
 
         # add start_node with cost 0 to forward search
-        qs[0].push(0, start_node)
+        heappush(qs[0], (0, start_node))
 
         # add end_node with cost 0 to backward search
-        qs[1].push(0, end_node)
+        heappush(qs[1], (0, end_node))
 
         # dictionary visted node -> (cost to node from start, previous node)
         source = [{}, {}]
@@ -122,20 +119,17 @@ class Router():
         stalled_count = 0
 
         # while the queues are not empty
-        while qs[0].not_empty() or qs[1].not_empty():
+        while qs[0] or qs[1]:
 
             # if the smallest cost to node in either queue is bigger than the
             # shortest path distance, we can halt
-            if best_dist <= min(qs[0].min_val(), qs[1].min_val()): break
+            if best_dist <= min(qs[0][0][0] if len(qs[0]) > 0 else sys.maxsize, qs[1][0][0] if len(qs[1]) > 0 else sys.maxsize): break
 
             # if the other queue is not empty, switch directions
-            if qs[1 - r].not_empty(): r = 1 - r
+            if qs[1 - r]: r = 1 - r
 
             # pop the minimum node
-            try:
-                dist_to_u, u = qs[r].pop()
-            except KeyError as e:
-                break
+            dist_to_u, u = heappop(qs[r])
 
             # if node has been settled by both searches
             if u in source[1 - r]:
@@ -149,42 +143,20 @@ class Router():
                     best_dist = dist_via_u
                     best_node = u
 
-            # look at all neighbors of the wrong gradient
-            # for forwards search, inspect the downward edge_dist
-            # for v, dist_u_v in self._anti_neighbors(r, u):
-
-            #     dist_to_u_via_v = dist_u_v + source[r].get(v, (math.inf, None))[0]
-            #     if dist_to_u > dist_to_u_via_v:
-
-            #         self._stall_bfs(r, u, dist_to_u, dist_to_u_via_v, source, stalled)
-            #         break
-
-            # if u is stalled
-            # if u in stalled[r]: continue
-
             # search
-            for v, edge_dist in self._neighbors(r, u):
-
-                # print('dir: %d examining %d->%d' % (r, u, v))
-                # if r == 0:
-                #     self.touch_path_fwd.extend([(u, v)])
-                # else:
-                #     self.touch_path_bwd.extend([(v, u)])
-
-                # compute tentative distance
-                dist_to_v_via_u = dist_to_u + edge_dist
+            for v, edge_dist in neighbors(r, u):
 
                 # if v has not been settled or a shorter path has been found
-                if v not in source[r] or dist_to_v_via_u < source[r][v][0]:
+                if v not in source[r] or dist_to_u + edge_dist < source[r][v][0]:
+
+                    # compute tentative distance
+                    dist_to_v_via_u = dist_to_u + edge_dist
 
                     # insert/update the queue, priority = new_cost
-                    qs[r].push(dist_to_v_via_u, v)
+                    heappush(qs[r], (dist_to_v_via_u, v))
 
                     # update the dictionary to link current -> neighbor
                     source[r][v] = (dist_to_v_via_u, u)
-
-                    # if v is stalled, unstall it
-                    #if v in stalled[r]: del stalled[r][v]
 
         if best_node is None: return []
 

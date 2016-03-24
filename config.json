@@ -9,7 +9,7 @@
     "realtime_factor": 10,
 
     "use_decision_graph": true,
-    "use_fast_contract": false,
+    "use_fast_contract": true,
     "adaptive_routing": true,
     "adaptive_routing_updates_s": 10,
     "graph_update_s": 15,
