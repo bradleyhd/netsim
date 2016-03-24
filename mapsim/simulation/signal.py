@@ -7,6 +7,11 @@ class Signal(object):
       self.arcs = {}
       self.__green = {}
 
+    def reset(self):
+
+      for (x, y) in self.__green.keys():
+        self.__green[(x, y)] = False
+
     def run(self):
 
       green_rotation_idx = 0

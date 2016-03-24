@@ -41,5 +41,6 @@ axes = plt.gca()
 # axes.set_xlim([0, np.max(np.append(xs1, xs2)) * 1.1])
 # axes.set_ylim([0, np.max(np.append(ys1, ys2)) * 1.1])
 
-plt.show()
+plt.savefig('test.pdf')
+#plt.show()
 

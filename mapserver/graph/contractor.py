@@ -6,7 +6,7 @@ import networkx as nx
 
 class GraphContractor(object):
 
-    def __init__(self, config, G):
+    def __init__(self, config, G, decision_map=None, reference_graph=None):
 
         self.__log = logging.getLogger(__name__)
         self.__config = config
@@ -14,7 +14,8 @@ class GraphContractor(object):
         self.G = G
         self.num_nodes = self.G.number_of_nodes()
         self.x_node_pq = PriorityQueue()
-        self.updates = {}
+        self.decision_map = decision_map
+        self.reference_graph = reference_graph
 
         self.__weight_label = config['graph_weight_label']
         self.__smoothing_factor = config['graph_weight_smoothing_factor']
@@ -138,7 +139,7 @@ class GraphContractor(object):
     #@profile
     def _calc_node_priority(self, v, initialize=True):
 
-        if self.__config['fast_contract']:
+        if self.__config['use_fast_contract']:
 
             return len(list(self._predecessors(v, initialize))) + len(list(self._successors(v, initialize)))
 
@@ -171,7 +172,7 @@ class GraphContractor(object):
         num_neighbors = len(neighbors)
 
         # compute the priority
-        priority = (total_num_shortcuts - num_neighbors) + total_search_size + (3 * self.G.node[v]['adj_count'])
+        priority = (total_num_shortcuts - num_neighbors) + (1 * self.G.node[v]['adj_count']) + total_search_size 
 
         return priority
 
@@ -192,96 +193,66 @@ class GraphContractor(object):
 
     def repair(self, reports):
 
-        # reset the contraction priority queue
-        self._node_priority_pq = PriorityQueue()
+        # if using a decisiong graph
+        if self.__config['use_decision_graph']:
 
-        for x, y, e in self.G.edges(data = True):
+            # for each edge
+            for u, v, e in self.G.edges(data = True):
 
-            if 'real_arc' in e:
-                new_weight = max(e['default_ttt'], (e['ttt'] * self.__decay_factor))
+                # if it's a shortcut, invalidate it
+                if not 'real_arc' in e:
 
-                if (x, y) in reports:
-
-                    updates = reports[(x, y)]
-                    new_weight = sum(updates) / len(updates)
-
-                weight = (self.__smoothing_factor * new_weight) + ((1 - self.__smoothing_factor) * e['ttt'])
-
-                # if x == 1899:
-                # if (x, y) in self.updates:
-                #     print('%s -> %s default: %s, current %s, new %s, final %s' % (x, y,e['default_ttt'], e['ttt'], new_weight, weight))
-
-                e['ttt'] = weight
-                e['real_ttt'] = weight
-
-
-
-
-
-
-
-
-        # if not self.updates:
-        #     return
-
-        # find the threshold priority
-        # threshold = -1
-        # for (x, y), weights in self.updates.items():
-
-        #     if x == 1899:
-        #         print(weights)
-
-        #     # compute the average weight
-        #     new_weight = sum(weights) / len(weights)
-        #     if x == 1899: #or x == 7041:
-        #         print('new weight %s->%s %s->%s' % (x, y, self.G[x][y]['ttt'], new_weight))
-
-        #     # use exponential smoothing
-        #     weight = (self.__SMOOTHING_FACTOR * new_weight) + ((1 - self.__SMOOTHING_FACTOR) * self.G[x][y]['ttt'])
-        #     if x == 1899: #or x == 7041:
-        #         print('weight %s->%s %s->%s' % (x, y, self.G[x][y]['ttt'], weight))
-
-        #     # find the lowest priority for each end of the segment and compare
-        #     # to global minimum
-        #     tmp = min(self.G.node[x]['priority'], self.G.node[y]['priority'])
-        #     if tmp < threshold or threshold == -1:
-        #         threshold = tmp
-
-        #     # update edge weight
-        #     self.G[x][y]['ttt'] = weight
-        #     self.G[x][y]['real_ttt'] = weight
-
-        # invalidate all affected shortcuts
-        for x, y, edge in self.G.edges(data = True):
-
-            if edge['is_shortcut']:
-
-                priority = self.G.node[edge['repl_node']]['priority']
-
-                #if priority >= threshold:
-
-                if 'real_arc' in edge:
-
-                    edge['is_shortcut'] = False
-                    edge['ttt'] = edge['real_ttt']
-                    del edge['repl_node']
+                    self.G.remove_edge(u, v)
 
                 else:
 
-                    self.G.remove_edge(x, y)
+                    # if a real edge is also a shortcut, reset it
+                    if e['is_shortcut']:
+                        e['is_shortcut'] = False
+                        e['ttt'] = e['real_ttt']
+                        del e['repl_node']
 
-        # enqueue all affected nodes for contraction
-        for n, d in self.G.nodes(data = True):
+                    # new_ttt = 0
 
-            #if d['priority'] >= threshold:
-            self._node_priority_pq.push(d['priority'], n)
+                    # for each edge in the orignal graph
+                    arc_weight = 0
+                    for x, y in self.decision_map[(u, v)]:
 
-        # repair the graph
-        self.contract_graph(False)
-        self.set_flags()
+                        z = self.reference_graph[x][y]
 
-        # reset updates queue
-        self.updates = {}
+                        # if the edge has a report, integrate it
+                        if (x, y) in reports:
+
+                            updates = reports[(x, y)]
+                            xy_weight = sum(updates) / len(updates)
+
+                        # else decay edge
+                        else:
+
+                            xy_weight = max(z['default_ttt'], (z['ttt'] * self.__decay_factor))
+
+                        xy_ttt = (self.__smoothing_factor * xy_weight) + ((1 - self.__smoothing_factor) * z['ttt'])
+                        arc_weight += xy_ttt
+
+                    if e['ttt'] != arc_weight:
+                        print('edge %s->%s %s->%s' % (u, v, e['ttt'], arc_weight))
+
+                    e['ttt'] = arc_weight
+                    e['real_ttt'] = arc_weight
+
+            # # reset the contraction priority queue
+            # self._node_priority_pq = PriorityQueue()
+
+            # enqueue all affected nodes for contraction
+            for n, d in self.G.nodes(data = True):
+
+                #if d['priority'] >= threshold:
+                d['priority'] = sys.maxsize
+
+            # repair the graph
+            self.order_nodes()
+            self.contract_graph()
+            self.set_flags()
 
     #@profile
     def contract_graph(self, initialize=True):
@@ -304,8 +275,8 @@ class GraphContractor(object):
 
             #print('%s: %s nodes left' % (v, self.G.number_of_nodes() - count))
 
-            if count % 10 == 0:
-                print('\r%.4f%%' % ((count / self.num_nodes) * 100), end = '')
+            if count % 1000 == 0:
+                self.__log.debug('%.4f%%' % ((count / self.num_nodes) * 100))
 
             #if count % 1000 == 0:
                 #self.re_order_nodes()
@@ -359,7 +330,7 @@ class GraphContractor(object):
 
             #print('node: %d, inspecting %d' % (v, v_ct))
 
-        print('\r%.4f%%' % 100)
+        # print('\r%.4f%%' % 100)
         self.__log.info('Nodes: %s Edges: %s' % ('{:,}'.format(self.G.number_of_nodes()), '{:,}'.format(self.G.number_of_edges())))
         timer.stop()
 

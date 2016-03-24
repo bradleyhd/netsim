@@ -33,8 +33,20 @@ class Sim:
     self.bottlenecks = self.__generate_bottlenecks()
     # self.trips = self.__generate_trips()
     self.buckets = buckets
-    self.adaptive = False
 
+
+    # compute delays
+    delay_window = (self.num_cars * 60) / self._config['cars_per_min']
+    self.delays = []
+
+    for i in range(0, self.num_cars):
+      self.delays.append(np.random.randint(0, delay_window))
+
+    # add cars
+    self.cars = self.__add_cars()
+
+    # add signals
+    self.signals, self.signal_map = self.__add_signals()
 
   def __generate_bottlenecks(self):
     """Generates a dictionary of start_node => f where f slows the link down by a factor of f"""
@@ -127,14 +139,19 @@ class Sim:
     res = requests.get('http://localhost:5000/routes/generate/%d' % (self.num_cars))
     routes = res.json()
 
-    delay_window = (self.num_cars * 60) / self._config['cars_per_min']
     for i in range(0, self.num_cars):
 
-      wait = np.random.randint(0, delay_window)
-      c = Car(i, self, wait, routes[i])
+      c = Car(i, self, self.delays[i], routes[i])
       cars.append(c)
 
     return cars
+
+  def __graph_updater(self):
+
+    while True:
+
+      res = requests.get('%s/update' % (self._config['routing_server_url']))
+      yield self.env.timeout(self._config['adaptive_routing_updates_s'])
 
   def location_watcher(self):
 
@@ -145,18 +162,12 @@ class Sim:
 
       yield self.env.timeout(self._config['location_history_poll_s'])
 
-  def setup(self, adaptive=False):
+  def setup(self):
     """Prepares a simulation for use before a run"""
 
     self.__log.debug('Setting up a new simulation run...')
 
     self.setup_time = datetime.now()
-    self.adaptive = adaptive
-
-    self.cars = self.__add_cars()
-
-    if self._config['enable_signals']:
-      self.signals, self.signal_map = self.__add_signals()
 
     # decide whether to do a realtime simulation
     if self._config['realtime']:
@@ -165,14 +176,19 @@ class Sim:
       self.env = simpy.Environment()
 
     for car in self.cars:
+      car.reset()
       self.env.process(car.run())
 
     if self._config['enable_signals']:
       for signal in self.signals:
+        signal.reset()
         self.env.process(signal.run())
 
     if self._config['enable_location_history']:
       self.env.process(self.location_watcher())
+
+    if self._config['adaptive_routing']:
+      self.env.process(self.__graph_updater())
 
   def run(self):
     """Runs the simulation"""

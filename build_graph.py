@@ -22,7 +22,7 @@ data_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + args.d
 
 # build the graph
 factory = GraphBuilder(config)
-graph, decision_graph = factory.from_file(data_file_path, True)
+graph, decision_graph = factory.from_file(data_file_path, config['use_decision_graph'])
 sim_data = factory.get_sim_data()
 
 # contract the decision graph
@@ -79,9 +79,9 @@ for n, d in decision_graph.nodes(data=True):
 props = dict(facecolor='none',edgecolor='none',boxstyle='round')
 
 nx.draw_networkx_nodes(decision_graph, pos = positions, nodelist = decision_graph.nodes(), node_color = 'c', linewidths = 0, node_size = 0.05, node_shape = 'o')
-edge_plot = nx.draw_networkx_edges(decision_graph, pos = positions, edgelist = reg_edges, edge_color = 'w', width = 0.05, alpha = 1.0, arrows = True)
+edge_plot = nx.draw_networkx_edges(decision_graph, pos = positions, edgelist = reg_edges, edge_color = 'w', width = 0.05, alpha = 1.0, arrows = False)
 
-edge_plot = nx.draw_networkx_edges(decision_graph, pos = positions, edgelist = up_edges, edge_color = 'r', width = 0.05, alpha = 1.0, arrows = True)
+edge_plot = nx.draw_networkx_edges(decision_graph, pos = positions, edgelist = up_edges, edge_color = 'r', width = 0.05, alpha = 1.0, arrows = False)
 # edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = down_edges, edge_color = 'b', width = 0.05, alpha = 1.0, arrows = False)
 nx.draw_networkx_labels(decision_graph, pos=positions, labels = labels, font_size=0.25, font_color='w', bbox=props)
 

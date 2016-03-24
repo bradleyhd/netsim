@@ -16,23 +16,18 @@ def generate(n):
 
 @app.route('/route/<start>/<end>')
 def route(start, end):
-  return json.dumps(server.route(int(start), int(end), False))
+  return json.dumps(server.route(int(start), int(end)))
 
 @app.route('/stats')
 def stats():
-  return json.dumps(server._stats_data);
+  return json.dumps(server._stats_data)
 
-@app.route('/adaptive/route/<start>/<end>')
-def adaptive_route(start, end):
-  return json.dumps(server.route(int(start), int(end), True))
+@app.route('/update')
+def update():
+  return json.dumps(server.update())
 
-@app.route('/adaptive/report/<start>/<end>/<duration>')
-@app.route('/adaptive/report/<start>/<end>/<duration>/<update>')
-def report(start, end, duration, update=None):
-
-  if update:
-    return json.dumps(server.report(int(start), int(end), float(duration), int(update)))
-
+@app.route('/report/<start>/<end>/<duration>')
+def report(start, end, duration):
   return json.dumps(server.report(int(start), int(end), float(duration)))
 
 if __name__ == '__main__':
@@ -45,9 +40,10 @@ if __name__ == '__main__':
   with open('config.json', 'r') as file:
       config = json.load(file)
       
-      if config['decision_graph']:
+      if config['use_decision_graph']:
         config['graph_file'] = 'data/%s.decision.graph' % args.graph_file
         config['sim_file'] = 'data/%s.sim' % args.graph_file
+        config['reference_graph_file'] = 'data/%s.graph' % args.graph_file
       else:
         config['graph_file'] = 'data/%s.graph' % args.graph_file
 

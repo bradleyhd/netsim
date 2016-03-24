@@ -27,30 +27,44 @@ sim_data = {}
 with open('data/' + args.graph_file + '.sim', 'rb') as file:
     sim_data = pickle.load(file)
 
+config['adaptive_routing'] = False
 sim = Sim(config, sim_data['segments'])
 sim.setup()
 history1 = sim.run()
-cars1 = sim.cars
+cars1 = []
+for car in sim.cars:
+  cars1.append({
+    'id': car.id,
+    'driving_time': car.total_driving_time,
+    'done': car.done
+  })
 
-# sim.setup(True)
-# history2 = sim.run()
-# cars2 = sim.cars
+sim._config['adaptive_routing'] = True
+sim.setup()
+history2 = sim.run()
+cars2 = []
+for car in sim.cars:
+  cars2.append({
+    'id': car.id,
+    'driving_time': car.total_driving_time,
+    'done': car.done
+  })
 
-# xs = []
-# ys = []
-# for i in range(len(cars2)):
-#   if cars1[i].done and cars2[i].done:
-#     speedup = (cars1[i].total_driving_time - cars2[i].total_driving_time) / 1000.0
-#     xs.append(i);
-#     ys.append(speedup)
-#     print('%d: %.2f\t%.2f\t%s' % (i, cars1[i].total_driving_time, cars2[i].total_driving_time, cars1[i].total_driving_time == cars2[i].total_driving_time))
+xs = []
+ys = []
+for i in range(len(cars2)):
+  if cars1[i]['done'] and cars2[i]['done']:
+    speedup = (cars1[i]['driving_time'] - cars2[i]['driving_time'])
+    xs.append(i);
+    ys.append(speedup)
+    print('%d: %.2f\t%.2f\t%s' % (i, cars1[i]['driving_time'], cars2[i]['driving_time'], cars1[i]['driving_time'] == cars2[i]['driving_time']))
 
-# plt.plot(xs, ys, 'r+')
+plt.plot(xs, ys, 'r+')
 
-# plt.title('Trip Duration Speedup')
-# plt.xlabel('Trip #')
-# plt.ylabel('Speedup (s)')
-# plt.savefig('test.pdf')
+plt.title('Trip Duration Speedup')
+plt.xlabel('Trip #')
+plt.ylabel('Speedup (s)')
+plt.savefig('test.pdf')
 
 out_file_name = args.saveas if args.saveas else 'test1.csv'
 
@@ -61,14 +75,14 @@ for line in history1:
 
 f.close()
 
-# out_file_name = args.saveas if args.saveas else 'test2.csv'
+out_file_name = args.saveas if args.saveas else 'test2.csv'
 
-# f = open(out_file_name, 'w')
+f = open(out_file_name, 'w')
 
-# for line in history2:
-#     f.write('%s, %s, %s\n' % line)
+for line in history2:
+    f.write('%s, %s, %s\n' % line)
 
-# f.close()
+f.close()
 
 
 if __name__ == '__main__':

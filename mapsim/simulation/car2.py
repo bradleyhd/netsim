@@ -14,32 +14,46 @@ class Car(object):
         self.id = id
         self.delay = delay
         self.trip = trip
+        self.actual_trip = []
 
         if self.trip:
             self.start_node = trip[0][0]
             self.end_node = trip[-1][1]
 
         self.current_speed = 0
-        self.target_speed_adjustment = np.random.normal(0, self.sim._config['speed_stdev_m/s'])
-        self.actual_trip = []
+
+        if self.sim._config['speed_stdev_m/s'] > 0:
+            self.target_speed_adjustment = np.random.normal(0, self.sim._config['speed_stdev_m/s'])
+        else:
+            self.target_speed_adjustment = 0
+
         self.leg = -1
         self.cell = -1
 
-        self.history = []        
+        self.history = [] 
+        self.total_driving_time = 0  
+        self.done = False
+
+    def reset(self):
+
+        self.actual_trip = []
+        self.current_speed = 0
+        self.leg = -1
+        self.cell = -1
+        self.history = [] 
+        self.total_driving_time = 0  
+        self.done = False
 
     def __route(self, start, end):
 
-        if self.sim.adaptive:
-            res = requests.get('http://localhost:5000/adaptive/route/%d/%d' % (start, end))
-        else:
-            res = requests.get('http://localhost:5000/route/%d/%d' % (start, end))
+        res = requests.get('%s/route/%d/%d' % (self.sim._config['routing_server_url'], start, end))
         route = res.json()
         
         return route
 
     def __report(self, start, end, duration):
 
-        res = requests.get('http://localhost:5000/adaptive/report/%d/%d/%f' % (start, end, duration))
+        res = requests.get('%s/report/%d/%d/%f' % (self.sim._config['routing_server_url'], start, end, duration))
 
     def __look(self, leg, cell, distance):
 
@@ -85,12 +99,15 @@ class Car(object):
             return
 
         # wait to start
-        yield self.sim.env.timeout(self.delay)
+        #if self.id > 0:
+        #yield self.sim.env.timeout(self.delay)
 
         from_leg = -1
         from_cell = -1
         to_leg = 0
         to_cell = 0
+
+        leg_duration = 0
 
         distance = self.sim._config['cell_length_m']
         acceleration = self.sim._config['acceleration_m/s^2']
@@ -114,6 +131,9 @@ class Car(object):
                 self.cell = -1
                 self.leg = -1
 
+                self.done = True
+                print('Car %s done' % self.id)
+
                 # exit
                 return
 
@@ -124,9 +144,37 @@ class Car(object):
             # if the target cell is actually on the next leg of the trip
             if to_cell >= len(to_arc['buckets']):
 
+                # ask for a new route on this leg
+                if self.sim._config['adaptive_routing']:
+
+                    self.actual_trip.append(self.trip[to_leg])
+                    x, y = self.trip[to_leg]
+                    #print('%s just finished %s->%s' % (self.id, x, y))
+
+                    self.__report(x, y, leg_duration)
+                    leg_duration = 0
+
+                    if 'decision_node' in self.sim.graph.node[y]:
+
+                        route = self.__route(self.trip[to_leg][1], self.end_node)
+
+                        new_trip = []
+                        new_trip.extend(self.actual_trip)
+                        new_trip.extend(route)
+
+                        # print('New route: %s' % route)
+
+                        if (new_trip != self.trip):
+                            print('Rerouting %s' % self.id)
+                            # print('Old trip: %s' % self.trip)
+                            # print('So far: %s' % self.actual_trip)
+                            # print('Route: %s' % route)
+                        self.trip = new_trip
+
                 # pick the next leg, and start over
                 to_leg += 1
                 to_cell = 0
+
                 continue
 
             # calculate the desired headway
@@ -145,6 +193,9 @@ class Car(object):
                 # calcuate the driver's desired speed
                 ffs = from_arc['ffs']
                 target_speed = ffs + self.target_speed_adjustment
+
+                if self.id == 0:
+                    target_speed = target_speed / 10
 
                 # vf = sqrt(vi^2 + 2ax)
                 final_speed = np.sqrt((self.current_speed ** 2) + (2 * acceleration * distance))
@@ -194,13 +245,18 @@ class Car(object):
                 # sleep for duration of the drive
                 # print('Final Speed: %s' % final_speed)
                 # print('Drive %ss' % t)
+                leg_duration += t
+                self.total_driving_time += t
                 yield self.sim.env.timeout(t)
 
             elif headway == 0:
 
                 # if there's no headway, re-evaluate in a bit
                 if headway == 0:
-                    yield self.sim.env.timeout(self.sim._config['driver_reaction_time_s'])
+                    t = self.sim._config['driver_reaction_time_s']
+                    leg_duration += t
+                    yield self.sim.env.timeout(t)
+                    self.total_driving_time += t
                     continue
 
             elif headway == target_headway:
@@ -226,6 +282,8 @@ class Car(object):
                 # sleep for duration of the drive
                 # print('Final Speed: %s' % final_speed)
                 # print('Drive %ss' % t)
+                leg_duration += t
+                self.total_driving_time += t
                 yield self.sim.env.timeout(t)
 
             # there's not enough headway, decelerate and move anyway
@@ -266,5 +324,7 @@ class Car(object):
                 # sleep for duration of the drive
                 # print('Final Speed: %s' % final_speed)
                 # print('Drive %ss' % t)
+                leg_duration += t
+                self.total_driving_time += t
                 yield self.sim.env.timeout(t)
 

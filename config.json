@@ -1,32 +1,38 @@
 {
-    "num_cars": 1000,
-    "cars_per_min": 500,
-    "sim_duration": 500,
+    "num_cars": 200,
+    "cars_per_min": 100,
+    "sim_duration": 2400,
     "num_bottlenecks": 20,
     "bottleneck_factor": 30,
+
     "realtime": false,
     "realtime_factor": 10,
-    "graph_update_frequency": 5,
+
+    "use_decision_graph": false,
+    "use_fast_contract": false,
+    "adaptive_routing": true,
+    "adaptive_routing_updates_s": 10,
+    "graph_update_s": 15,
+    "graph_weight_label": "ttt",
+    "graph_weight_smoothing_factor": 0.5,
+    "graph_weight_decay_factor": 0.9,
+
+    "routing_server_url": "http://localhost:5000",
 
     "enable_location_history": true,
     "location_history_poll_s": 1,
 
     "cell_length_m": 5,
-    "speed_stdev_m/s": 1,
+    "speed_stdev_m/s": 0,
     "acceleration_m/s^2": 3.8,
     "driver_reaction_time_s": 0.2,
     
     "enable_signals": true,
-    "green_light_s": 10,
+    "green_light_s": 20,
     "yellow_light_s": 5,
     "enable_extended_green": true,
-    "max_extended_green_light_s": 60,
-
-    "decision_graph": true,
-    "fast_contract": true,
-    "graph_weight_label": "ttt",
-    "graph_weight_smoothing_factor": 0.25,
-    "graph_weight_decay_factor": 0.75,
+    "max_extended_green_light_s": 40,
+    
     "default_node_attrs": {
         "adj_count": 0
     },
