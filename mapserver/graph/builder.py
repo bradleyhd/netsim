@@ -67,7 +67,10 @@ class GraphBuilder(object):
         elif isinstance(self.__current_item, Way) and name == 'nd':
 
             # look up the node id
-            n = self.__nodes_seen[attrs['ref']]
+            try:
+                n = self.__nodes_seen[attrs['ref']]
+            except KeyError as e:
+                return
 
             # append the node to the current path
             self.__current_item.path.append(n.attrs['id'])

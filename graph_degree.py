@@ -1,10 +1,11 @@
-import argparse, json, pickle, time
+import argparse, json, pickle, time, random
 import os.path
 import networkx as nx
 import numpy as np
 
 from mapserver.graph.builder import GraphBuilder
-from mapserver.graph.contractor import GraphContractor
+from mapserver.graph.contractor2 import GraphContractor
+from mapserver.routing.router2 import Router
 from networkx.readwrite import json_graph
 
 import matplotlib.pyplot as plt
@@ -14,12 +15,14 @@ with open('config.json', 'r') as file:
     config = json.load(file)
 
 files = [
-  'natchez',
-  'battleground',
-  'north_gso',
-  'mid_gso',
-  'greensboro',
-  'guilford',
+  # 'natchez',
+  # 'battleground',
+  # 'north_gso',
+  # 'mid_gso',
+  # 'greensboro',
+  # 'guilford',
+  # 'charlotte',
+  'nc',
 ]
 
 def successors(graph, x):
@@ -29,13 +32,14 @@ def successors(graph, x):
 
 degree = []
 
-data = [[]] * 2 * len(files)
 count = 0
+trips = 1000
 
 number_of_nodes = [[], []]
 mean_degree = [[], []]
 edges_added = [[], []]
-times = [[], []]
+contract_times = [[], []]
+route_times = [[], []]
 
 for f in files:
 
@@ -65,7 +69,22 @@ for f in files:
   number_of_nodes[0].append(graph.number_of_nodes())
   mean_degree[0].append(np.mean([len(successors(graph, n)) for n in graph.nodes()]))
   edges_added[0].append(edge_delta)
-  times[0].append(end)
+  contract_times[0].append(end)
+
+  router = Router(graph)
+  times = []
+  coords = []
+
+  for x in range(0, trips):
+
+    (start_node, end_node) = random.sample(list(graph.nodes()), 2)
+    start = time.perf_counter()
+    router.route(start_node, end_node)
+    end = time.perf_counter() - start
+    coords.append((start_node, end_node))
+    times.append(end)
+
+  route_times[0].append(np.median(times))
 
   count += 1
 
@@ -88,18 +107,33 @@ for f in files:
   number_of_nodes[1].append(graph2.number_of_nodes())
   mean_degree[1].append(np.mean([len(successors(graph2, n)) for n in graph2.nodes()]))
   edges_added[1].append(edge_delta)
-  times[1].append(end)
+  contract_times[1].append(end)
+
+  router = Router(graph2)
+  times = []
+
+  for x in range(0, trips):
+
+    (start_node, end_node) = coords[x]
+    start = time.perf_counter()
+    router.route(start_node, end_node)
+    end = time.perf_counter() - start
+    times.append(end)
+
+  route_times[1].append(np.median(times))
 
   count += 1
 
-  print(number_of_nodes)
-  print(mean_degree)
-  print(edges_added)
-  print(times)
+  print('Nodes: %s' % number_of_nodes)
+  print('Mean Outdegree: %s' % mean_degree)
+  print('Shortcuts Added: %s' % edges_added)
+  print('Contraction Times: %s' % contract_times)
+  print('Route Times: %s' % route_times)
 
   print('---')
 
-print(number_of_nodes)
-print(mean_degree)
-print(edges_added)
-print(times)
+print('Nodes: %s' % number_of_nodes)
+print('Mean Outdegree: %s' % mean_degree)
+print('Shortcuts Added: %s' % edges_added)
+print('Contraction Times: %s' % contract_times)
+print('Route Times: %s' % route_times)

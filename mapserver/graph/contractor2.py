@@ -2,7 +2,7 @@ from mapserver.util.pq import PriorityQueue
 from mapserver.util.timer import Timer
 from heapq import heappush, heappop
 
-import itertools, logging, sys
+import itertools, logging, sys, random
 import networkx as nx
 
 class GraphContractor(object):
@@ -59,13 +59,13 @@ class GraphContractor(object):
     # ignore node MUST have a priority set
 
     #@profile
-    def _local_search(self, start_node, ignore_node, end_nodes, direct_costs, initialize=True, search_limit=None):
+    def _local_search(self, start_node, ignore_node, end_nodes, direct_costs, initialize=True, search_limit=None, hop_limit=None):
 
         pq = []
         label = self.__weight_label
 
-        # add start_node with cost 0
-        heappush(pq, (0, start_node,))
+        # add start_node with cost 0, hops 0
+        heappush(pq, (0, start_node, 0))
 
         # key = node value = (cost_to_node, predecessor)
         cost_and_predecessor = {}
@@ -74,16 +74,13 @@ class GraphContractor(object):
         max_cost = max(direct_costs)
         cost_and_predecessor[start_node] = (0, None)
 
-        # priority = self.G.node[ignore_node]['priority']
-
         while pq:
 
             # pop the next node from the queue
             # the priority value here is the cost to the node
-            current_cost, current_node = heappop(pq)
+            current_cost, current_node, hops = heappop(pq)
 
-            # exit if the frontier has already exceeded a cost that would yield
-            # a witness path
+            # exit if the frontier has already exceeded a cost that would yield a witness path
             if current_cost > max_cost:
                 break
 
@@ -95,6 +92,10 @@ class GraphContractor(object):
             if search_limit and len(cost_and_predecessor) > search_limit:
                 break
 
+            # if this node is past the hop limit, ignore it
+            if hop_limit and hops > hop_limit:
+                continue
+
             for neighbor_node, edge_tags in self._successors(current_node, initialize):
 
                 # if the neighbor has not yet been examined or a cheaper path to the neighbor has been found
@@ -104,12 +105,10 @@ class GraphContractor(object):
                     new_cost = current_cost + edge_tags[label]
 
                     # insert/update the queue, priority = new_cost
-                    #self._local_search_pq.push(new_cost, neighbor_node)
-                    heappush(pq, (new_cost, neighbor_node))
+                    heappush(pq, (new_cost, neighbor_node, hops + 1))
 
                     # update the dictionary to link current -> neighbor
                     cost_and_predecessor[neighbor_node] = (new_cost, current_node)
-
 
         # list of end_nodes that ARE the shortest/only path
         # these will need a shortcut added
@@ -141,7 +140,7 @@ class GraphContractor(object):
         return (len(cost_and_predecessor), sp_ends)
 
     #@profile
-    def _calc_node_priority(self, v, initialize=True):
+    def _calc_node_priority(self, v, initialize=True, search_limit=None):
 
         if self.__config['use_fast_contract']:
 
@@ -169,7 +168,7 @@ class GraphContractor(object):
 
             # if there are any successors
             if w_nodes:
-                search_size, sp_ends = self._local_search(u, v, w_nodes, uvw_costs, initialize, search_limit=1000)
+                search_size, sp_ends = self._local_search(u, v, w_nodes, uvw_costs, initialize, search_limit=search_limit)
                 total_search_size += search_size
                 total_num_shortcuts += len(sp_ends)
 
@@ -188,39 +187,16 @@ class GraphContractor(object):
 
         timer = Timer(__name__)
         timer.start('Ordering nodes...')
+        search_limit = self.__config['search_limit_fraction'] * self.G.number_of_nodes()
 
         for v in self.G.nodes_iter():
 
-            priority = self._calc_node_priority(v)
-            #self._node_priority_pq.push(priority, v)
+            priority = self._calc_node_priority(v, search_limit=search_limit)
             heappush(self._node_priority_pq, (priority, v))
             self._node_priority_map[v] = priority
 
         timer.stop()
         self.__log.info('%d nodes, %.10f ms/node' % (self.num_nodes, timer.elapsed / self.num_nodes))
-
-    def re_order_nodes(self):
-
-        pq = []
-        pq_map = {}
-        num_nodes = len(self._node_priority_pq)
-
-        timer = Timer(__name__)
-        timer.start('Re-ordering nodes...')
-
-        nodes = set([v for (pri, v) in self._node_priority_pq])
-        for v in nodes:
-
-            priority = self._calc_node_priority(v)
-            #self._node_priority_pq.push(priority, v)
-            heappush(pq, (priority, v))
-            pq_map[v] = priority
-
-        self._node_priority_pq = pq
-        self._node_priority_map = pq_map
-
-        timer.stop()
-        self.__log.info('%d nodes, %.10f ms/node' % (num_nodes, timer.elapsed / num_nodes))
 
     def repair(self, reports):
 
@@ -295,9 +271,16 @@ class GraphContractor(object):
         pq = self._node_priority_pq
         pq_map = self._node_priority_map
         graph = self.G
+        label = self.__weight_label
         enable_lazy_updates = self.__config['enable_lazy_updates']
-        lazy_update_interval = self.__config['lazy_update_interval']
+        lazy_update_interval = self.__config['lazy_update_interval_fraction'] * graph.number_of_nodes()
+        self.__log.debug('Lazy Update Interval: %s' % lazy_update_interval)
 
+        hop_limit = self.__config['hop_limit'] if self.__config['enable_hop_limit'] else None
+        self.__log.debug('Hop Limit: %s' % hop_limit)
+
+        search_limit = self.__config['search_limit_fraction'] * self.G.number_of_nodes()
+        self.__log.debug('Search Limit: %s' % search_limit)
         lazy_update_ct = 0
 
         while pq:
@@ -315,7 +298,7 @@ class GraphContractor(object):
             if enable_lazy_updates and pq:
 
                 # calculate priority again
-                new_priority = self._calc_node_priority(v)
+                new_priority = self._calc_node_priority(v, True, search_limit=search_limit)
 
                 # if the priority is higher than the next thing in the queue
                 if new_priority > pq[0][0]:
@@ -326,7 +309,7 @@ class GraphContractor(object):
                     if lazy_update_ct >= lazy_update_interval:
 
                         # re-order nodes
-                        nodes = set([v for (pri, v) in pq])
+                        nodes = set([v for (pri, v) in pq if v in pq_map and pq_map[v] == pri])
                         print(len(nodes))
     
                         for v in nodes:
@@ -345,12 +328,16 @@ class GraphContractor(object):
 
                     continue
 
+                else:
+
+                    lazy_update_ct = 0
+
             # save the priority
             graph.node[v]['priority'] = count
             v_priority = count
 
             # print progress
-            if count % int(self.num_nodes / 5) == 0:
+            if count % int(self.num_nodes / 20) == 0:
                 self.__log.debug('%.4f%%' % ((count / self.num_nodes) * 100))
 
             neighbors = set()
@@ -369,35 +356,33 @@ class GraphContractor(object):
 
                     neighbors.add(w)
                     w_nodes.append(w)
-                    uvw_costs.append(u_edge[self.__weight_label] + w_edge[self.__weight_label])
+                    uvw_costs.append(u_edge[label] + w_edge[label])
 
                 # if there are successors (which make a complete uvw path)
                 if w_nodes:
 
                     # local search to get which paths need shortcuts
-                    _, ends = self._local_search(u, v, w_nodes, uvw_costs, True)
+                    _, ends = self._local_search(u, v, w_nodes, uvw_costs, True, hop_limit=hop_limit)
 
                     # for each path add a shortcut
                     for end in ends:
 
-                        weight = u_edge[self.__weight_label] + self.G[v][end][self.__weight_label]
+                        weight = u_edge[label] + self.G[v][end][label]
 
                         tags = {
-                            self.__weight_label: weight,
+                            label: weight,
                             'is_shortcut': True,
                             'repl_node': v,
                         }
 
-                        self.G.add_edge(u, end, **tags)
+                        graph.add_edge(u, end, **tags)
 
             for n in neighbors:
 
-                self.G.node[n]['adj_count'] += 1
-                new_priority = self._calc_node_priority(n, True)
-
-                #if n in pq_map and new_priority != pq_map[n]:
-                heappush(self._node_priority_pq, (new_priority, n))
-                self._node_priority_map[n] = new_priority
+                graph.node[n]['adj_count'] += 1
+                new_priority = self._calc_node_priority(n, True, search_limit=search_limit)
+                heappush(pq, (new_priority, n))
+                pq_map[n] = new_priority
 
         self.__log.info('Nodes: %s Edges: %s' % ('{:,}'.format(self.G.number_of_nodes()), '{:,}'.format(self.G.number_of_edges())))
         timer.stop()
