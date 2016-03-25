@@ -50,7 +50,6 @@ for f in files:
   # build the graph
   factory = GraphBuilder(config)
   graph = factory.from_file(data_file_path, False)
-  graph2 = graph.copy()
 
   numed = graph.number_of_edges()
 
@@ -89,6 +88,10 @@ for f in files:
   count += 1
 
   config['use_fast_contract'] = True
+
+  # build the graph
+  factory = GraphBuilder(config)
+  graph2 = factory.from_file(data_file_path, False)
 
   numed = graph2.number_of_edges()
 
