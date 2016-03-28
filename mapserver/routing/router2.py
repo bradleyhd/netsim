@@ -158,7 +158,7 @@ class Router():
                     # update the dictionary to link current -> neighbor
                     source[r][v] = (dist_to_v_via_u, u)
 
-        # if best_node is None: return []
+        if best_node is None: return []
 
         # if not self.exact:
         #     choices = []
@@ -173,32 +173,32 @@ class Router():
         #     #best_node = random.choice(choices[0:2])
         #     best_node = choices[self.opt]
 
-        # route =  self.__path_unpack(source[0], start_node, best_node) + self.__path_unpack(source[1], end_node, best_node, forwards_search = False)
+        route =  self.__path_unpack(source[0], start_node, best_node) + self.__path_unpack(source[1], end_node, best_node, forwards_search = False)
 
         # if not self.exact:
 
         #     #experimental cycle detection
         #     route = self.__scrub_cycles(route)    
 
-        # # for i in range(len(route)-1):
-        # #     (x, y) = route[i]
-        # #     (x1, y1) = route[i+1]
-        # #     rd = self.G[x][y].get('name', '?')
-        # #     nrd = self.G[x1][y1].get('name', '?')
-        # #     print('%d %d: %s->%s' % (x, y, rd, nrd))
+        # for i in range(len(route)-1):
+        #     (x, y) = route[i]
+        #     (x1, y1) = route[i+1]
+        #     rd = self.G[x][y].get('name', '?')
+        #     nrd = self.G[x1][y1].get('name', '?')
+        #     print('%d %d: %s->%s' % (x, y, rd, nrd))
 
-        # if self.decision_map:
-        #     tmp_route = []
+        if self.decision_map:
+            tmp_route = []
 
-        #     for x, y in route:
-        #         if (x, y) in self.decision_map:
-        #             tmp_route.extend(self.decision_map[(x, y)])
-        #         else:
-        #             tmp_route.extend([(x, y)])
+            for x, y in route:
+                if (x, y) in self.decision_map:
+                    tmp_route.extend(self.decision_map[(x, y)])
+                else:
+                    tmp_route.extend([(x, y)])
 
-        #     return tmp_route
+            return tmp_route
 
-        # return route
+        return route
 
     def __scrub_cycles(self, route):
 

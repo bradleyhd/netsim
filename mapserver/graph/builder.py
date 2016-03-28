@@ -398,7 +398,7 @@ class GraphBuilder(object):
     def get_sim_data(self):
 
         sim_data = {
-            'segments': self.__compute_segments()
+            # 'segments': self.__compute_segments()
         }
 
         if self.decision_graph is not None:

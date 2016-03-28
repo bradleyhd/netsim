@@ -15,14 +15,14 @@ with open('config.json', 'r') as file:
     config = json.load(file)
 
 files = [
-  # 'natchez',
-  # 'battleground',
-  # 'north_gso',
+  'natchez',
+  'battleground',
+  'north_gso',
   # 'mid_gso',
   # 'greensboro',
   # 'guilford',
   # 'charlotte',
-  'nc',
+  # 'nc',
 ]
 
 def successors(graph, x):
@@ -33,17 +33,21 @@ def successors(graph, x):
 degree = []
 
 count = 0
-trips = 1000
+trips = 5000
 
-number_of_nodes = [[], []]
-mean_degree = [[], []]
-edges_added = [[], []]
-contract_times = [[], []]
-route_times = [[], []]
+number_of_nodes = [[], [], [], []]
+mean_degree = [[], [], [], []]
+edges_added = [[], [], [], []]
+contract_times = [[], [], [], []]
+route_times = [[], [], [], []]
 
 for f in files:
 
   data_file_path = 'data/%s.osm' % f
+
+  # ------
+  # EDS5 regular
+  # ------
 
   config['use_fast_contract'] = False
 
@@ -87,11 +91,16 @@ for f in files:
 
   count += 1
 
+  # ------
+  # D5 regular
+  # ------  
+
   config['use_fast_contract'] = True
 
   # build the graph
   factory = GraphBuilder(config)
   graph2 = factory.from_file(data_file_path, False)
+  sim_data = factory.get_sim_data()
 
   numed = graph2.number_of_edges()
 
@@ -124,6 +133,98 @@ for f in files:
     times.append(end)
 
   route_times[1].append(np.median(times))
+
+  count += 1
+
+  # ------
+  # EDS5 decision
+  # ------
+
+  config['use_fast_contract'] = False
+
+  # build the graph
+  factory = GraphBuilder(config)
+  _, graph3 = factory.from_file(data_file_path, True)
+  sim_data = factory.get_sim_data()
+
+  numed = graph3.number_of_edges()
+
+  # contract the graph
+  C = GraphContractor(config, graph3)
+
+  start = time.perf_counter()
+  C.order_nodes()
+  C.contract_graph()
+  C.set_flags()
+  end = time.perf_counter() - start
+
+  edges = C.G.number_of_edges()
+  edge_delta = edges-numed
+
+  number_of_nodes[2].append(graph3.number_of_nodes())
+  mean_degree[2].append(np.mean([len(successors(graph3, n)) for n in graph3.nodes()]))
+  edges_added[2].append(edge_delta)
+  contract_times[2].append(end)
+
+  router = Router(graph3, decision_map=sim_data['decision_route_map'])
+  times = []
+  coords = []
+
+  for x in range(0, trips):
+
+    (start_node, end_node) = random.sample(list(graph3.nodes()), 2)
+    start = time.perf_counter()
+    router.route(start_node, end_node)
+    end = time.perf_counter() - start
+    coords.append((start_node, end_node))
+    times.append(end)
+
+  route_times[2].append(np.median(times))
+
+  count += 1
+
+  # ------
+  # D5 fast
+  # ------  
+
+  config['use_fast_contract'] = True
+
+  # build the graph
+  factory = GraphBuilder(config)
+  _, graph4 = factory.from_file(data_file_path, True)
+  sim_data = factory.get_sim_data()
+
+  numed = graph4.number_of_edges()
+
+  # contract the graph
+  C = GraphContractor(config, graph4)
+
+  start = time.perf_counter()
+  C.order_nodes()
+  C.contract_graph()
+  C.set_flags()
+  end = time.perf_counter() - start
+
+  edges = C.G.number_of_edges()
+  edge_delta = edges-numed
+
+  number_of_nodes[3].append(graph4.number_of_nodes())
+  mean_degree[3].append(np.mean([len(successors(graph4, n)) for n in graph4.nodes()]))
+  edges_added[3].append(edge_delta)
+  contract_times[3].append(end)
+
+  router = Router(graph4, decision_map=sim_data['decision_route_map'])
+  times = []
+
+  for x in range(0, trips):
+
+    (start_node, end_node) = coords[x]
+    start = time.perf_counter()
+    router.route(start_node, end_node)
+    end = time.perf_counter() - start
+    times.append(end)
+
+  route_times[3].append(np.median(times))
 
   count += 1
 
