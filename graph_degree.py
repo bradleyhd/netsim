@@ -18,9 +18,9 @@ files = [
   'natchez',
   'battleground',
   'north_gso',
-  # 'mid_gso',
-  # 'greensboro',
-  # 'guilford',
+  'mid_gso',
+  'greensboro',
+  'guilford',
   # 'charlotte',
   # 'nc',
 ]
@@ -40,6 +40,7 @@ mean_degree = [[], [], [], []]
 edges_added = [[], [], [], []]
 contract_times = [[], [], [], []]
 route_times = [[], [], [], []]
+repair_times = [[], [], [], []]
 
 for f in files:
 
@@ -50,10 +51,11 @@ for f in files:
   # ------
 
   config['use_fast_contract'] = False
+  config['use_decision_graph'] = False
 
   # build the graph
   factory = GraphBuilder(config)
-  graph = factory.from_file(data_file_path, False)
+  graph = factory.from_file(data_file_path, config['use_decision_graph'])
 
   numed = graph.number_of_edges()
 
@@ -89,6 +91,11 @@ for f in files:
 
   route_times[0].append(np.median(times))
 
+  start = time.perf_counter()
+  C.repair({})
+  end = time.perf_counter() - start
+  repair_times[0].append(end)
+
   count += 1
 
   # ------
@@ -96,10 +103,11 @@ for f in files:
   # ------  
 
   config['use_fast_contract'] = True
+  config['use_decision_graph'] = False
 
   # build the graph
   factory = GraphBuilder(config)
-  graph2 = factory.from_file(data_file_path, False)
+  graph2 = factory.from_file(data_file_path, config['use_decision_graph'])
   sim_data = factory.get_sim_data()
 
   numed = graph2.number_of_edges()
@@ -134,6 +142,11 @@ for f in files:
 
   route_times[1].append(np.median(times))
 
+  start = time.perf_counter()
+  C.repair({})
+  end = time.perf_counter() - start
+  repair_times[1].append(end)
+
   count += 1
 
   # ------
@@ -141,16 +154,17 @@ for f in files:
   # ------
 
   config['use_fast_contract'] = False
+  config['use_decision_graph'] = True
 
   # build the graph
   factory = GraphBuilder(config)
-  _, graph3 = factory.from_file(data_file_path, True)
+  ref_graph3, graph3 = factory.from_file(data_file_path, config['use_decision_graph'])
   sim_data = factory.get_sim_data()
 
   numed = graph3.number_of_edges()
 
   # contract the graph
-  C = GraphContractor(config, graph3)
+  C = GraphContractor(config, graph3, decision_map=sim_data['decision_route_map'], reference_graph=ref_graph3)
 
   start = time.perf_counter()
   C.order_nodes()
@@ -181,6 +195,11 @@ for f in files:
 
   route_times[2].append(np.median(times))
 
+  start = time.perf_counter()
+  C.repair({})
+  end = time.perf_counter() - start
+  repair_times[2].append(end)
+
   count += 1
 
   # ------
@@ -188,16 +207,17 @@ for f in files:
   # ------  
 
   config['use_fast_contract'] = True
+  config['use_decision_graph'] = True
 
   # build the graph
   factory = GraphBuilder(config)
-  _, graph4 = factory.from_file(data_file_path, True)
+  ref_graph4, graph4 = factory.from_file(data_file_path, config['use_decision_graph'])
   sim_data = factory.get_sim_data()
 
   numed = graph4.number_of_edges()
 
   # contract the graph
-  C = GraphContractor(config, graph4)
+  C = GraphContractor(config, graph4, decision_map=sim_data['decision_route_map'], reference_graph=ref_graph4)
 
   start = time.perf_counter()
   C.order_nodes()
@@ -226,6 +246,11 @@ for f in files:
 
   route_times[3].append(np.median(times))
 
+  start = time.perf_counter()
+  C.repair({})
+  end = time.perf_counter() - start
+  repair_times[3].append(end)
+
   count += 1
 
   print('Nodes: %s' % number_of_nodes)
@@ -233,6 +258,7 @@ for f in files:
   print('Shortcuts Added: %s' % edges_added)
   print('Contraction Times: %s' % contract_times)
   print('Route Times: %s' % route_times)
+  print('Repair Times: %s' % repair_times)
 
   print('---')
 
@@ -240,4 +266,5 @@ print('Nodes: %s' % number_of_nodes)
 print('Mean Outdegree: %s' % mean_degree)
 print('Shortcuts Added: %s' % edges_added)
 print('Contraction Times: %s' % contract_times)
+print('Repair Times: %s' % repair_times)
 print('Route Times: %s' % route_times)

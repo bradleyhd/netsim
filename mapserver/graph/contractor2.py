@@ -241,11 +241,62 @@ class GraphContractor(object):
                         xy_ttt = (self.__smoothing_factor * xy_weight) + ((1 - self.__smoothing_factor) * z['ttt'])
                         arc_weight += xy_ttt
 
-                    if e['ttt'] != arc_weight:
-                        print('edge %s->%s %s->%s' % (u, v, e['ttt'], arc_weight))
+                    # if e['ttt'] != arc_weight:
+                    #     print('edge %s->%s %s->%s' % (u, v, e['ttt'], arc_weight))
 
                     e['ttt'] = arc_weight
                     e['real_ttt'] = arc_weight
+
+            # # reset the contraction priority queue
+            # self._node_priority_pq = PriorityQueue()
+
+            # enqueue all affected nodes for contraction
+            for n, d in self.G.nodes(data = True):
+
+                #if d['priority'] >= threshold:
+                d['priority'] = sys.maxsize
+
+            # repair the graph
+            self.order_nodes()
+            self.contract_graph()
+            self.set_flags()
+
+        else:
+
+            # for each edge
+            for u, v, e in self.G.edges(data = True):
+
+                # if it's a shortcut, invalidate it
+                if not 'real_arc' in e:
+
+                    self.G.remove_edge(u, v)
+
+                else:
+
+                    # if a real edge is also a shortcut, reset it
+                    if e['is_shortcut']:
+                        e['is_shortcut'] = False
+                        e['ttt'] = e['real_ttt']
+                        del e['repl_node']
+
+                    # if the edge has a report, integrate it
+                    if (u, v) in reports:
+
+                        updates = reports[(u, v)]
+                        uv_weight = sum(updates) / len(updates)
+
+                    # else decay edge
+                    else:
+
+                        uv_weight = max(e['default_ttt'], (e['ttt'] * self.__decay_factor))
+
+                    uv_ttt = (self.__smoothing_factor * uv_weight) + ((1 - self.__smoothing_factor) * e['ttt'])
+
+                    # if e['ttt'] != uv_ttt:
+                    #     print('edge %s->%s %s->%s' % (u, v, e['ttt'], uv_ttt))
+
+                    e['ttt'] = uv_ttt
+                    e['real_ttt'] = uv_ttt
 
             # # reset the contraction priority queue
             # self._node_priority_pq = PriorityQueue()
