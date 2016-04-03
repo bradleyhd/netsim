@@ -16,8 +16,6 @@ class Car(object):
         self.trip = trip
         self.actual_trip = []
 
-        print(self.trip)
-
         if self.trip:
             self.start_node = trip[0][0]
             self.end_node = trip[-1][1]
