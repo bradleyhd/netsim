@@ -164,7 +164,7 @@ class Car(object):
 
                         # print('New route: %s' % route)
 
-                        if (new_trip != self.trip):
+                        # if (new_trip != self.trip):
                             # print('Rerouting %s' % self.id)
                             # print('Old trip: %s' % self.trip)
                             # print('So far: %s' % self.actual_trip)
