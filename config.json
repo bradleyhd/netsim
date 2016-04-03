@@ -1,7 +1,7 @@
 {
-    "num_cars": 200,
-    "cars_per_min": 100,
-    "sim_duration": 1200,
+    "num_cars": 5000,
+    "cars_per_min": 500,
+    "sim_duration": 1800,
     "num_bottlenecks": 20,
     "bottleneck_factor": 30,
 

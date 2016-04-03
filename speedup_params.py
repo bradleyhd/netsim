@@ -19,8 +19,8 @@ args = parser.parse_args()
 
 smoothing_factors = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 decay_factors = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-smoothing_factors = [0.1, 0.5, 0.9]
-decay_factors = [0.5, 0.9]
+# smoothing_factors = [0.1, 0.5, 0.9]
+# decay_factors = [0.5, 0.9]
 results = []
 
 def run(smoothing_factor, decay_factor):
