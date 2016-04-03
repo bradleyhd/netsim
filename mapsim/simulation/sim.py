@@ -43,7 +43,7 @@ class Sim:
       self.delays.append(np.random.randint(0, delay_window))
 
     # add cars
-    self.cars = self.__add_cars()
+    #self.cars = self.__add_cars()
 
     # add signals
     self.signals, self.signal_map = self.__add_signals()
@@ -130,14 +130,11 @@ class Sim:
 
     return signals, signal_map
 
-  def __add_cars(self):
+  def __add_cars(self, routes):
     """Initializes cars and requests an intial route for each one"""
 
     self.__log.debug('Adding cars and calculating intial routes...')
     cars = []
-
-    res = requests.get('http://localhost:5000/routes/generate/%d' % (self.num_cars))
-    routes = res.json()
 
     for i in range(0, self.num_cars):
 
@@ -162,7 +159,7 @@ class Sim:
 
       yield self.env.timeout(self._config['location_history_poll_s'])
 
-  def setup(self):
+  def setup(self, routes):
     """Prepares a simulation for use before a run"""
 
     self.__log.debug('Setting up a new simulation run...')
@@ -181,8 +178,11 @@ class Sim:
         for i in range(len(self.buckets[x][y]['buckets'])):
           self.buckets[x][y]['buckets'][i] = 0
 
+    # for car in self.cars:
+    #   car.reset()
+    #   self.env.process(car.run())
+    self.cars = self.__add_cars(routes);
     for car in self.cars:
-      car.reset()
       self.env.process(car.run())
 
     if self._config['enable_signals']:

@@ -126,9 +126,8 @@ class Server():
 
   def report(self, start, end, duration, graph_update_frequency=None):
 
-    self.report_count += 1
+    # self.report_count += 1
     #self._log.debug('Received report #%d of %.2f s on %s->%s' % (self.report_count, duration, start, end))
-    print(self.report_count)
 
     self.reports[(start, end)].append(duration)
 

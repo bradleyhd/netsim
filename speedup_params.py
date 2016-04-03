@@ -19,17 +19,17 @@ args = parser.parse_args()
 
 smoothing_factors = [0.1, 0.25, 0.5, 0.75, 0.9]
 decay_factors = [0.1, 0.25, 0.5, 0.75, 0.9]
-# smoothing_factors = [0.1]
-# decay_factors = [0.5]
+# smoothing_factors = [0.1, 0.5]
+# decay_factors = [0.9]
 results = []
 
-def run(sim, smoothing_factor, decay_factor):
+def run(sim, smoothing_factor, decay_factor, routes):
 
   sim._config['graph_weight_smoothing_factor'] = smoothing_factor
   sim._config['graph_weight_decay_factor'] = decay_factor
   sim._config['adaptive_routing'] = False
-  
-  sim.setup()
+
+  sim.setup(routes)
   history1 = sim.run()
   cars1 = []
   for car in sim.cars:
@@ -40,7 +40,7 @@ def run(sim, smoothing_factor, decay_factor):
     })
 
   sim._config['adaptive_routing'] = True
-  sim.setup()
+  sim.setup(routes)
   history2 = sim.run()
   cars2 = []
   for car in sim.cars:
@@ -66,7 +66,10 @@ def run(sim, smoothing_factor, decay_factor):
     'mean': np.mean(ys),
     'data': ys
   })
-  print('Mean: %s Median: %s' % (np.mean(ys), np.median(ys)))
+  try:
+    print('Mean: %s Median: %s' % (np.mean(ys), np.median(ys)))
+  except:
+    pass
 
   # plt.plot(xs, ys, 'r+')
 
@@ -107,10 +110,13 @@ if __name__ == '__main__':
 
   sim = Sim(config, sim_data['segments'])
 
+  res = requests.get('http://localhost:5000/routes/generate/%d' % (config['num_cars']))
+  routes = res.json()
+  
   for s in smoothing_factors:
     for d in decay_factors:
       res = requests.get('%s/restart' % (config['routing_server_url']))
-      run(sim, s, d)
+      run(sim, s, d, routes)
 
   f = open('results.txt', 'w')
   f.write(json.dumps(results))

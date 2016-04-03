@@ -1,5 +1,5 @@
 {
-    "num_cars": 500,
+    "num_cars": 100,
     "cars_per_min": 100,
     "sim_duration": 900,
     "num_bottlenecks": 20,
@@ -16,7 +16,7 @@
     "hop_limit": 5,
     "search_limit_fraction": 0.0000625,
     "adaptive_routing": true,
-    "adaptive_routing_updates_s": 20,
+    "adaptive_routing_updates_s": 30,
     "graph_weight_label": "ttt",
     "graph_weight_smoothing_factor": 0.5,
     "graph_weight_decay_factor": 0.9,
