@@ -15,54 +15,26 @@ def exponential(x, a, b, c):
 #plt.figure(num=None, figsize=(16, 12), dpi=300, facecolor='w', edgecolor='k')
 plt.figure()
 
-xs =  [[1490, 4855, 15189, 43427, 138081, 346252, 681587], [1490, 4855, 15189, 43427, 138081, 346252, 681587], [1490, 4855, 15189, 43427, 138081, 346252, 681587], [1490, 4855, 15189, 43427, 138081, 346252, 681587],]
-ys =  [[0.00026715049989434192, 0.0014035574999979872, 0.0061703260000740556, 0.010549757500257329, 0.02555760200016266, 0.040123603999745683, 0.063447176499721536], [0.00028976849989703624, 0.0013198225001360697, 0.005111699499821043, 0.012535749500102611, 0.028472909000129221, 0.047916752000219276, 0.071634814000390179], [0.00026610049985720252, 0.0011969804997988831, 0.0045219670000733458, 0.014301050000085525, 0.020341850000022532, 0.034052538999276294, 0.060132389000500552], [0.00027198950010642875, 0.001089114000023983, 0.0049764625000534579, 0.011896184500301388, 0.028867914499869585, 0.062511313500181132, 0.07914886300022772]]
+xs = [[1490, 4855, 15189, 43427, 138081, 346252, 681587, 1503567], [1490, 4855, 15189, 43427, 138081, 346252, 681587, 1503567], [1490, 4855, 15189, 43427, 138081, 346252, 681587, 1503567], [1490, 4855, 15189, 43427, 138081, 346252, 681587, 1503567]]
+ys = [[0.00027718550018107635, 0.0014051910002308432, 0.0059716799996749614, 0.0091314454998610017, 0.024666515500030073, 0.038507096499870386, 0.058184093000818393, 0.12793981399954646], [0.00029577450004580896, 0.0013283954999678826, 0.0050448135002625349, 0.011782086999573949, 0.027539378500023304, 0.043186980499740457, 0.064648241999748279, 0.12179330999970261], [0.00026476150014786981, 0.0012458404999051709, 0.0046034065003368596, 0.01235319650004385, 0.019788737499766285, 0.028652757000145357, 0.056187490000411344, 0.080005879999589524], [0.00025842550030574785, 0.0010697440002331859, 0.004112398999495781, 0.010342937000132224, 0.028225709000253119, 0.052291365500423126, 0.06639447450015723, 0.12681145349961298]]
 
-y1 = np.array(ys[0])
-x1 = np.array(xs[0])
 
-xl1 = np.linspace(np.min(x1), np.max(x1), 50)
+def graph(i, label, pt_fmt, ln_fmt):
 
-popt, pcov = curve_fit(exponential, x1, y1)
+  y = np.array(ys[i])
+  x = np.array(xs[i])
 
-plt.plot(x1, y1, 'ro', label='EDS5 - regular')
-plt.plot(xl1, exponential(xl1, *popt), 'r--')
+  xl = np.linspace(np.min(x), np.max(x), 500)
 
-# --
+  popt, pcov = curve_fit(exponential, x, y)
 
-y2 = np.array(ys[1])
-x2 = np.array(xs[1])
+  plt.plot(x, y, pt_fmt, label=label)
+  plt.plot(xl, exponential(xl, *popt), ln_fmt)
 
-xl2 = np.linspace(np.min(x2), np.max(x2), 50)
-
-popt, pcov = curve_fit(exponential, x2, y2)
-
-plt.plot(x2, y2, 'bs', label='D5 - regular')
-plt.plot(xl2, exponential(xl2, *popt), 'b--')
-
-# --
-
-y3 = np.array(ys[2])
-x3 = np.array(xs[2])
-
-xl3 = np.linspace(np.min(x3), np.max(x3), 50)
-
-popt, pcov = curve_fit(exponential, x3, y3)
-
-plt.plot(x3, y3, 'go', label='EDS5 - decision')
-plt.plot(xl3, exponential(xl3, *popt), 'g--')
-
-# --
-
-y4 = np.array(ys[3])
-x4 = np.array(xs[3])
-
-xl4 = np.linspace(np.min(x4), np.max(x4), 50)
-
-popt, pcov = curve_fit(exponential, x4, y4)
-
-plt.plot(x4, y4, 'ms', label='D5 - decision')
-plt.plot(xl3, exponential(xl3, *popt), 'm--')
+graph(0, 'EDS5 - regular', 'ro', 'r--')
+graph(1, 'D5 - regular', 'bs', 'b--')
+graph(2, 'EDS5 - decision', 'go', 'g--')
+graph(3, 'D5 - decision', 'ms', 'm--')
 
 plt.title('Effects of Node Ordering on 1000 Random Route Queries')
 plt.xlabel('$\\vert V\/\\vert$')
@@ -70,9 +42,9 @@ plt.ylabel('Mean Route Time (s)')
 plt.legend(loc=0, numpoints=1)
 
 axes = plt.gca()
-# axes.set_xscale('symlog')
+axes.set_xscale('log')
 
-plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+# plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
 
-#plt.savefig('test.pdf')
-plt.show()
+plt.savefig('nodes_vs_routing_speed.png')
+# plt.show()

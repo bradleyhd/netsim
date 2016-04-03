@@ -3,8 +3,8 @@ import numpy as np
 
 from collections import defaultdict
 from copy import deepcopy
-from mapserver.graph.contractor import GraphContractor
-from mapserver.routing.router import Router
+from mapserver.graph.contractor2 import GraphContractor
+from mapserver.routing.router2 import Router
 from networkx.readwrite import json_graph as imports
 from mapserver.graph.update import GraphUpdate
 from mapserver.graph.worker import Worker
@@ -13,6 +13,14 @@ from mapserver.util.timer import Timer
 class Server():
 
   def __init__(self, config):
+
+    self.setup(config)
+
+    # if self.__config['realtime']:
+    #   self.worker = Worker()
+    #   self.worker.start()
+
+  def setup(self, config):
 
     self._log = logging.getLogger(__name__)
     self.__config = config
@@ -77,9 +85,8 @@ class Server():
 
     self._log.debug('Graph loaded successfully.')
 
-    # if self.__config['realtime']:
-    #   self.worker = Worker()
-    #   self.worker.start()
+  def reset(self):
+    self.setup(self.__config)
 
   def route(self, start, end):
 
@@ -93,8 +100,8 @@ class Server():
     # y = [3535] * n
 
     # battleground
-    x = [322] * n
-    y = [2010] * n
+    # x = [322] * n
+    # y = [2010] * n
 
     routes = []
     for i in range(n):
@@ -109,7 +116,7 @@ class Server():
       timer = Timer(__name__)
       timer.start('Updating graph...')
 
-      self._log.debug('Processing reports: %s' % (dict(self.reports)))
+      #self._log.debug('Processing reports: %s' % (dict(self.reports)))
       self.contractors[self.switch].repair(self.reports)
       self.reports = defaultdict(list)
 
@@ -120,7 +127,7 @@ class Server():
   def report(self, start, end, duration, graph_update_frequency=None):
 
     self.report_count += 1
-    self._log.debug('Received report #%d of %.2f s on %s->%s' % (self.report_count, duration, start, end))
+    #self._log.debug('Received report #%d of %.2f s on %s->%s' % (self.report_count, duration, start, end))
 
     self.reports[(start, end)].append(duration)
 

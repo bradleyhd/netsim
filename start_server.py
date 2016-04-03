@@ -30,6 +30,10 @@ def update():
 def report(start, end, duration):
   return json.dumps(server.report(int(start), int(end), float(duration)))
 
+@app.route('/reset')
+def reset():
+  return json.dumps(server.reset())
+
 if __name__ == '__main__':
 
   parser = argparse.ArgumentParser(description='Launches the mapping server.')

@@ -132,7 +132,7 @@ class Car(object):
                 self.leg = -1
 
                 self.done = True
-                print('Car %s done' % self.id)
+                # print('Car %s done' % self.id)
 
                 # exit
                 return
@@ -165,7 +165,7 @@ class Car(object):
                         # print('New route: %s' % route)
 
                         if (new_trip != self.trip):
-                            print('Rerouting %s' % self.id)
+                            # print('Rerouting %s' % self.id)
                             # print('Old trip: %s' % self.trip)
                             # print('So far: %s' % self.actual_trip)
                             # print('Route: %s' % route)
