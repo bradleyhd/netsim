@@ -10,16 +10,13 @@ from copy import deepcopy
 
 parser = argparse.ArgumentParser(description='Draws a graph.')
 parser.add_argument('graph_file', help='the name of the graph file')
-# parser.add_argument('trips', type=int, help='the name of the graph file')
-# parser.add_argument('sim_length', type=int, help='the name of the graph file')
-# parser.add_argument('bottlenecks', type=int, help='the name of the graph file')
 parser.add_argument('--saveas', help='the name of the output file')
 
 args = parser.parse_args()
 
 smoothing_factors = [0.1, 0.25, 0.5, 0.75, 0.9]
 decay_factors = [0.1, 0.25, 0.5, 0.75, 0.9]
-# smoothing_factors = [0.1, 0.5]
+# smoothing_factors = [0.1]
 # decay_factors = [0.9]
 results = []
 
@@ -27,9 +24,16 @@ def run(sim, smoothing_factor, decay_factor, routes):
 
   sim._config['graph_weight_smoothing_factor'] = smoothing_factor
   sim._config['graph_weight_decay_factor'] = decay_factor
+
+  # --
+  # Run without adaptive routing
+  # --
+
   sim._config['adaptive_routing'] = False
 
-  sim.setup(routes)
+  res = requests.get('%s/restart' % (config['routing_server_url']))
+
+  sim.setup()
   history1 = sim.run()
   cars1 = []
   for car in sim.cars:
@@ -39,8 +43,15 @@ def run(sim, smoothing_factor, decay_factor, routes):
       'done': car.done
     })
 
+  # --
+  # Run with adaptive routing
+  # --
+
   sim._config['adaptive_routing'] = True
-  sim.setup(routes)
+
+  res = requests.get('%s/restart' % (config['routing_server_url']))
+
+  sim.setup()
   history2 = sim.run()
   cars2 = []
   for car in sim.cars:
@@ -50,6 +61,10 @@ def run(sim, smoothing_factor, decay_factor, routes):
       'done': car.done
     })
 
+  # --
+  # Calculate speedup
+  # --
+
   xs = []
   ys = []
   for i in range(len(cars2)):
@@ -57,44 +72,13 @@ def run(sim, smoothing_factor, decay_factor, routes):
       speedup = (cars1[i]['driving_time'] - cars2[i]['driving_time'])
       xs.append(i);
       ys.append(speedup)
-      # print('%d: %.2f\t%.2f\t%s' % (i, cars1[i]['driving_time'], cars2[i]['driving_time'], cars1[i]['driving_time'] == cars2[i]['driving_time']))
 
   print('Smoothing: %s Decay: %s' % (smoothing_factor, decay_factor))
-  results.append({
-    'smoothing_factor': smoothing_factor,
-    'decay_factor': decay_factor,
-    'mean': np.mean(ys),
-    'data': ys
-  })
+  results.append((smoothing_factor, decay_factor, np.mean(ys)))
   try:
     print('Mean: %s Median: %s' % (np.mean(ys), np.median(ys)))
   except:
     pass
-
-  # plt.plot(xs, ys, 'r+')
-
-  # plt.title('Trip Duration Speedup')
-  # plt.xlabel('Trip #')
-  # plt.ylabel('Speedup (s)')
-  # plt.savefig('test.pdf')
-
-# out_file_name = args.saveas if args.saveas else 'test1.csv'
-
-# f = open(out_file_name, 'w')
-
-# for line in history1:
-#     f.write('%s, %s, %s\n' % line)
-
-# f.close()
-
-# out_file_name = args.saveas if args.saveas else 'test2.csv'
-
-# f = open(out_file_name, 'w')
-
-# for line in history2:
-#     f.write('%s, %s, %s\n' % line)
-
-# f.close()
 
 if __name__ == '__main__':
 
@@ -108,14 +92,13 @@ if __name__ == '__main__':
   with open('data/' + args.graph_file + '.sim', 'rb') as file:
       sim_data = pickle.load(file)
 
-  sim = Sim(config, sim_data['segments'])
-
   res = requests.get('http://localhost:5000/routes/generate/%d' % (config['num_cars']))
   routes = res.json()
+
+  sim = Sim(config, sim_data['segments'], routes)
   
   for s in smoothing_factors:
     for d in decay_factors:
-      res = requests.get('%s/restart' % (config['routing_server_url']))
       run(sim, s, d, routes)
 
   f = open('results.txt', 'w')

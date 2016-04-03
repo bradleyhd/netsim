@@ -10,7 +10,7 @@ from mapsim.simulation.signal import Signal
 
 class Sim:
 
-  def __init__(self, config, buckets):
+  def __init__(self, config, buckets, routes):
 
     self.__log = logging.getLogger(__name__)
     self._config = config
@@ -33,7 +33,7 @@ class Sim:
     self.bottlenecks = self.__generate_bottlenecks()
     # self.trips = self.__generate_trips()
     self.buckets = buckets
-
+    self.routes = routes
 
     # compute delays
     delay_window = (self.num_cars * 60) / self._config['cars_per_min']
@@ -43,7 +43,7 @@ class Sim:
       self.delays.append(np.random.randint(0, delay_window))
 
     # add cars
-    #self.cars = self.__add_cars()
+    self.cars = self.__add_cars()
 
     # add signals
     self.signals, self.signal_map = self.__add_signals()
@@ -130,7 +130,7 @@ class Sim:
 
     return signals, signal_map
 
-  def __add_cars(self, routes):
+  def __add_cars(self):
     """Initializes cars and requests an intial route for each one"""
 
     self.__log.debug('Adding cars and calculating intial routes...')
@@ -138,7 +138,7 @@ class Sim:
 
     for i in range(0, self.num_cars):
 
-      c = Car(i, self, self.delays[i], routes[i])
+      c = Car(i, self, self.delays[i], self.routes[i])
       cars.append(c)
 
     return cars
@@ -159,7 +159,7 @@ class Sim:
 
       yield self.env.timeout(self._config['location_history_poll_s'])
 
-  def setup(self, routes):
+  def setup(self):
     """Prepares a simulation for use before a run"""
 
     self.__log.debug('Setting up a new simulation run...')
@@ -178,11 +178,8 @@ class Sim:
         for i in range(len(self.buckets[x][y]['buckets'])):
           self.buckets[x][y]['buckets'][i] = 0
 
-    # for car in self.cars:
-    #   car.reset()
-    #   self.env.process(car.run())
-    self.cars = self.__add_cars(routes);
     for car in self.cars:
+      car.reset()
       self.env.process(car.run())
 
     if self._config['enable_signals']:

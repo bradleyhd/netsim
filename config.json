@@ -1,5 +1,5 @@
 {
-    "num_cars": 100,
+    "num_cars": 500,
     "cars_per_min": 100,
     "sim_duration": 900,
     "num_bottlenecks": 20,
