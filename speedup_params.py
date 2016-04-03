@@ -17,25 +17,18 @@ parser.add_argument('--saveas', help='the name of the output file')
 
 args = parser.parse_args()
 
-smoothing_factors = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-decay_factors = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-# smoothing_factors = [0.1, 0.5, 0.9]
-# decay_factors = [0.5, 0.9]
+smoothing_factors = [0.1, 0.25, 0.5, 0.75, 0.9]
+decay_factors = [0.1, 0.25, 0.5, 0.75, 0.9]
+# smoothing_factors = [0.1]
+# decay_factors = [0.5]
 results = []
 
-def run(smoothing_factor, decay_factor):
+def run(sim, smoothing_factor, decay_factor):
 
-  config['graph_weight_smoothing_factor'] = smoothing_factor
-  config['graph_weight_decay_factor'] = decay_factor
-
-  config['graph_file'] = 'data/%s.graph' % args.graph_file
-
-  sim_data = {}
-  with open('data/' + args.graph_file + '.sim', 'rb') as file:
-      sim_data = pickle.load(file)
-
-  config['adaptive_routing'] = False
-  sim = Sim(config, sim_data['segments'])
+  sim._config['graph_weight_smoothing_factor'] = smoothing_factor
+  sim._config['graph_weight_decay_factor'] = decay_factor
+  sim._config['adaptive_routing'] = False
+  
   sim.setup()
   history1 = sim.run()
   cars1 = []
@@ -106,10 +99,18 @@ if __name__ == '__main__':
   with open('config.json', 'r') as file:
       config = json.load(file)
 
+  config['graph_file'] = 'data/%s.graph' % args.graph_file
+
+  sim_data = {}
+  with open('data/' + args.graph_file + '.sim', 'rb') as file:
+      sim_data = pickle.load(file)
+
+  sim = Sim(config, sim_data['segments'])
+
   for s in smoothing_factors:
     for d in decay_factors:
       res = requests.get('%s/restart' % (config['routing_server_url']))
-      run(s, d)
+      run(sim, s, d)
 
   f = open('results.txt', 'w')
   f.write(json.dumps(results))

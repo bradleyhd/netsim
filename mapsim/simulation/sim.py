@@ -175,6 +175,12 @@ class Sim:
     else:
       self.env = simpy.Environment()
 
+    # reset buckets
+    for x in self.buckets:
+      for y in self.buckets[x]:
+        for i in range(len(self.buckets[x][y]['buckets'])):
+          self.buckets[x][y]['buckets'][i] = 0
+
     for car in self.cars:
       car.reset()
       self.env.process(car.run())
