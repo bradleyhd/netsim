@@ -370,7 +370,7 @@ class GraphBuilder(object):
 
             length = e['length'] # in meters
             cell_length = self.__config['cell_length_m']
-            num_buckets = int(length / cell_length)
+            num_buckets = max(int(length / cell_length), 1)
             num_lanes = 1 #self._road_parameters[e['highway']]['lanes']
 
             if x not in segments:
