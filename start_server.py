@@ -30,9 +30,9 @@ def update():
 def report(start, end, duration):
   return json.dumps(server.report(int(start), int(end), float(duration)))
 
-@app.route('/reset')
+@app.route('/reset/s/d')
 def reset():
-  return json.dumps(server.reset())
+  return json.dumps(server.reset(int(s), int(d)))
 
 if __name__ == '__main__':
 

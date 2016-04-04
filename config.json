@@ -1,7 +1,7 @@
 {
-    "num_cars": 500,
+    "num_cars": 1000,
     "cars_per_min": 100,
-    "sim_duration": 900,
+    "sim_duration": 1800,
     "num_bottlenecks": 20,
     "bottleneck_factor": 30,
 
@@ -23,8 +23,8 @@
 
     "routing_server_url": "http://localhost:5000",
 
-    "enable_location_history": false,
-    "location_history_poll_s": 1,
+    "enable_location_history": true,
+    "location_history_poll_s": 5,
 
     "cell_length_m": 5,
     "speed_stdev_m/s": 2,

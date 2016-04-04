@@ -85,8 +85,10 @@ class Server():
 
     self._log.debug('Graph loaded successfully.')
 
-  def reset(self):
+  def reset(self, s, d):
     self.setup(self.__config)
+    self.__config['graph_weight_smoothing_factor'] = s
+    self.__config['graph_weight_decay_factor'] = s
 
   def route(self, start, end):
 

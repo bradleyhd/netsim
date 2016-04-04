@@ -10,9 +10,6 @@ from copy import deepcopy
 
 parser = argparse.ArgumentParser(description='Draws a graph.')
 parser.add_argument('graph_file', help='the name of the graph file')
-# parser.add_argument('trips', type=int, help='the name of the graph file')
-# parser.add_argument('sim_length', type=int, help='the name of the graph file')
-# parser.add_argument('bottlenecks', type=int, help='the name of the graph file')
 parser.add_argument('--saveas', help='the name of the output file')
 
 args = parser.parse_args()
@@ -66,23 +63,23 @@ plt.xlabel('Trip #')
 plt.ylabel('Speedup (s)')
 plt.savefig('test.pdf')
 
-# out_file_name = args.saveas if args.saveas else 'test1.csv'
+out_file_name = args.saveas if args.saveas else 'test1.csv'
 
-# f = open(out_file_name, 'w')
+f = open(out_file_name, 'w')
 
-# for line in history1:
-#     f.write('%s, %s, %s\n' % line)
+for line in history1:
+    f.write('%s, %s, %s\n' % line)
 
-# f.close()
+f.close()
 
-# out_file_name = args.saveas if args.saveas else 'test2.csv'
+out_file_name = args.saveas if args.saveas else 'test2.csv'
 
-# f = open(out_file_name, 'w')
+f = open(out_file_name, 'w')
 
-# for line in history2:
-#     f.write('%s, %s, %s\n' % line)
+for line in history2:
+    f.write('%s, %s, %s\n' % line)
 
-# f.close()
+f.close()
 
 
 if __name__ == '__main__':

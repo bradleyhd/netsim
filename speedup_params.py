@@ -14,8 +14,8 @@ parser.add_argument('--saveas', help='the name of the output file')
 
 args = parser.parse_args()
 
-smoothing_factors = [0.1, 0.25, 0.5, 0.75, 0.9]
-decay_factors = [0.1, 0.25, 0.5, 0.75, 0.9]
+smoothing_factors = [0.3, 0.5, 0.7, 0.9]
+decay_factors = [1]
 # smoothing_factors = [0.1]
 # decay_factors = [0.9]
 results = []
@@ -31,7 +31,7 @@ def run(sim, smoothing_factor, decay_factor, routes):
 
   sim._config['adaptive_routing'] = False
 
-  res = requests.get('%s/restart' % (config['routing_server_url']))
+  res = requests.get('%s/restart/%s/%s' % (config['routing_server_url'], smoothing_factor, decay_factor))
 
   sim.setup()
   history1 = sim.run()
@@ -49,7 +49,7 @@ def run(sim, smoothing_factor, decay_factor, routes):
 
   sim._config['adaptive_routing'] = True
 
-  res = requests.get('%s/restart' % (config['routing_server_url']))
+  res = requests.get('%s/restart/%s/%s' % (config['routing_server_url'], smoothing_factor, decay_factor))
 
   sim.setup()
   history2 = sim.run()
