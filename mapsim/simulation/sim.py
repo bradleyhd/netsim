@@ -162,6 +162,15 @@ class Sim:
 
       yield self.env.timeout(self._config['location_history_poll_s'])
 
+  def progress_watcher(self):
+
+    while True:
+
+      pct = self.env.now / self._config['sim_duration']
+      print('%0.4f%%' % pct)
+
+      yield self.env.timeout(10)
+
   def setup(self):
     """Prepares a simulation for use before a run"""
 
@@ -195,6 +204,8 @@ class Sim:
 
     if self._config['adaptive_routing']:
       self.env.process(self.__graph_updater())
+
+    self.env.process(self.progress_watcher())
 
   def run(self):
     """Runs the simulation"""

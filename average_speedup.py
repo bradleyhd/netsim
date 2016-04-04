@@ -54,14 +54,18 @@ for i in range(len(cars2)):
     speedup = (cars1[i]['driving_time'] - cars2[i]['driving_time'])
     xs.append(i);
     ys.append(speedup)
-    print('%d: %.2f\t%.2f\t%s' % (i, cars1[i]['driving_time'], cars2[i]['driving_time'], cars1[i]['driving_time'] == cars2[i]['driving_time']))
+    # print('%d: %.2f\t%.2f\t%s' % (i, cars1[i]['driving_time'], cars2[i]['driving_time'], cars1[i]['driving_time'] == cars2[i]['driving_time']))
 
-plt.plot(xs, ys, 'r+')
+f = open('results.txt', 'w')
+f.write(json.dumps(ys))
+f.close()
 
-plt.title('Trip Duration Speedup')
-plt.xlabel('Trip #')
-plt.ylabel('Speedup (s)')
-plt.savefig('test.pdf')
+# plt.plot(xs, ys, 'r+')
+
+# plt.title('Trip Duration Speedup')
+# plt.xlabel('Trip #')
+# plt.ylabel('Speedup (s)')
+# plt.savefig('test.pdf')
 
 out_file_name = args.saveas if args.saveas else 'test1.csv'
 
