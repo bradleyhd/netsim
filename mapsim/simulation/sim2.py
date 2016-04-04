@@ -2,7 +2,7 @@ import networkx as nx
 import numpy as np
 import simpy as simpy
 import time as time
-import logging, json, collections, requests, pickle
+import logging, json, collections, requests, pickle, concurrent, sys
 from networkx.readwrite import json_graph as imports
 from datetime import datetime
 from mapsim.simulation.car2 import Car
@@ -11,12 +11,12 @@ from mapserver.routing.server import Server
 
 class Sim:
 
-  def __init__(self, server, config):
+  def __init__(self, config, routes):
 
     self.__log = logging.getLogger(__name__)
     self._config = config
-    self.server = server
     self.orderer = 0
+    self.routes = routes
 
     # load graph from file
     file_path = self._config['graph_file']
@@ -143,21 +143,67 @@ class Sim:
 
     # res = requests.get('http://localhost:5000/routes/generate/%d' % (self.num_cars))
     # routes = res.json()
-    routes = self.server.generate(self.num_cars)
+    # routes = self.server.generate(self.num_cars)
 
     for i in range(0, self.num_cars):
 
-      c = Car(i, self, self.delays[i], routes[i])
+      c = Car(i, self, self.delays[i], self.routes[i])
       cars.append(c)
 
     return cars
+
+  def __reroute(self, car):
+
+    car.reroute()
+
+  def __rerouter(self):
+
+    while True:
+      
+      with concurrent.futures.ThreadPoolExecutor(max_workers=self._config['threads']) as executor:
+
+        # Start the load operations and mark each future with its URL
+        future_to_url = {executor.submit(self.__reroute, car): car for car in self.cars if car.needs_reroute == True}
+        for future in concurrent.futures.as_completed(future_to_url):
+          url = future_to_url[future]
+          try:
+              data = future.result()
+            
+          except Exception as exc:
+              print('%r generated an exception: %s' % (url, exc))
+              sys.exit()
+
+      yield self.env.timeout(0.1)
+
+  def __report(self, car):
+
+    car.send_reports()
+
+  def __reporter(self):
+
+    while True:
+      
+      with concurrent.futures.ThreadPoolExecutor(max_workers=self._config['threads']) as executor:
+
+        # Start the load operations and mark each future with its URL
+        future_to_url = {executor.submit(self.__report, car): car for car in self.cars}
+        for future in concurrent.futures.as_completed(future_to_url):
+          url = future_to_url[future]
+          try:
+            data = future.result()
+            
+          except Exception as exc:
+            print('%r generated an exception: %s' % (url, exc))
+            sys.exit()
+
+      yield self.env.timeout(0.1)
 
   def __graph_updater(self):
 
     while True:
 
-      # res = requests.get('%s/update' % (self._config['routing_server_url']))
-      self.server.update()
+      res = requests.get('%s/update' % (self._config['routing_server_url']))
+      # self.server.update()
       yield self.env.timeout(self._config['adaptive_routing_updates_s'])
 
   def location_watcher(self):
@@ -221,6 +267,8 @@ class Sim:
 
     if self._config['adaptive_routing']:
       self.env.process(self.__graph_updater())
+      self.env.process(self.__rerouter())
+      self.env.process(self.__reporter())
 
     self.env.process(self.progress_watcher())
 

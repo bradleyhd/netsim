@@ -94,6 +94,17 @@ class Server():
 
     return self.routers[self.switch].route(start, end)
 
+  def generate_random(self):
+
+    x = np.random.choice(self.graphs[self.switch].nodes(), 1)[0]
+    y = np.random.choice(self.graphs[self.switch].nodes(), 1)[0]
+
+    print(x, y)
+
+    routes = self.route(x, y)
+
+    return routes
+
   def generate(self, n):
 
     x = np.random.choice(self.graphs[self.switch].nodes(), n)

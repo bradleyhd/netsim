@@ -21,7 +21,6 @@ class Car(object):
         
         self.id = id
         self.delay = delay
-        self.location_history = True
 
         # np.random.seed()
         # self.start_node = np.random.choice([x for x, d in self.graph.nodes(data=True) if 'decision_node' in d])
@@ -54,6 +53,7 @@ class Car(object):
         self.total_driving_distance = 0
         self.history = []        
 
+        self.needs_reroute = False
         self.wait = 0
         self.halt = False
         self.done = False
@@ -173,6 +173,21 @@ class Car(object):
 
         # if self.leg != -1 and self.cell != -1:
         self.__log_location_now(self.leg, self.cell)
+
+    def reroute(self):
+
+        (x, y) = self.trip[self.leg]
+
+        new_route = self.__route(x, self.end_node)
+        new_trip = self.actual_trip + new_route
+
+        if new_trip != self.trip:
+            print(new_trip)
+            print(self.trip)
+            print('*************** rerouting: %s' % self.id)
+
+        self.trip = new_trip
+        self.needs_reroute = False
 
     #@profile
     def run(self):
@@ -310,20 +325,22 @@ class Car(object):
                 if next_leg < len(self.trip) and self.sim.adaptive:
 
                     (x, y) = self.trip[next_leg]
-                    if 'decision_node' in self.graph.node[x]: 
+                    if 'decision_node' in self.graph.node[x]:
+
+                        self.needs_reroute = True
 
                         # ask for an updated route from end of this leg to end node
                         
                         #new_route = self.router.route(x, self.end_node)
-                        new_route = self.__route(x, self.end_node)
-                        new_trip = self.actual_trip + new_route
+                        # new_route = self.__route(x, self.end_node)
+                        # new_trip = self.actual_trip + new_route
 
-                        if new_trip != self.trip:
-                            #print(new_trip)
-                            #print(self.trip)
-                            print('*************** rerouting: %s' % self.id)
+                        # if new_trip != self.trip:
+                        #     #print(new_trip)
+                        #     #print(self.trip)
+                        #     print('*************** rerouting: %s' % self.id)
 
-                        self.trip = new_trip
+                        # self.trip = new_trip
                         #print('New route(%s, %s): %s' % (y, self.end_node, self.trip))
 
                     # else:

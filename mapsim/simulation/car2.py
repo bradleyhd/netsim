@@ -33,12 +33,15 @@ class Car(object):
         self.leg = -1
         self.cell = -1
 
+        self.report_queue = []
+        self.needs_reroute = False
         self.history = [] 
         self.total_driving_time = 0  
         self.done = False
 
     def reset(self):
 
+        self.needs_reroute = False
         self.actual_trip = []
         self.current_speed = 0
         self.leg = -1
@@ -49,16 +52,23 @@ class Car(object):
 
     def __route(self, start, end):
 
-        # res = requests.get('%s/route/%d/%d' % (self.sim._config['routing_server_url'], start, end))
-        # route = res.json()
-        route = self.sim.server.route(start, end)
+        res = requests.get('%s/route/%d/%d' % (self.sim._config['routing_server_url'], start, end))
+        route = res.json()
+        # route = self.sim.server.route(start, end)
         
         return route
 
+    def send_reports(self):
+        while len(self.report_queue):
+            start, end, duration = self.report_queue.pop()
+            res = requests.get('%s/report/%d/%d/%f' % (self.sim._config['routing_server_url'], start, end, duration))
+
     def __report(self, start, end, duration):
 
+        # pass
+        self.report_queue.append((start, end, duration))
         # res = requests.get('%s/report/%d/%d/%f' % (self.sim._config['routing_server_url'], start, end, duration))
-        self.sim.server.report(start, end, duration)
+        # self.sim.server.report(start, end, duration)
 
     def __look(self, leg, cell, distance):
 
@@ -98,6 +108,37 @@ class Car(object):
             entry = (lon, lat, abs_time.isoformat())
             self.history.append(entry)
 
+    def reroute(self):
+
+        (x, y) = self.trip[self.leg]
+
+        # print('reroute car %s on %s->%s' % (self.id, x, y))
+        # print(self.leg)
+
+        
+        # print('old route:   %s' % self.trip)
+        # print('Trip so far: %s' % self.actual_trip)
+        
+        # print('decision_node' in self.sim.graph.node[y])
+
+        new_route = self.__route(y, self.end_node)
+
+        # print('new route    %s' % new_route)
+
+        
+        
+        
+        new_trip = self.actual_trip + new_route
+
+        # if new_trip != self.trip:
+            
+        #     print(new_trip)
+        #     print(self.trip)
+        #     print('*************** rerouting: %s' % self.id)
+
+        self.trip = new_trip
+        self.needs_reroute = False
+
     def run(self):
 
         if len(self.trip) == 0:
@@ -125,6 +166,9 @@ class Car(object):
 
             # print('----------')
             # print('Car %s attempting %s:%s->%s:%s' % (self.id, from_leg, from_cell, to_leg, to_cell))
+
+            if self.needs_reroute:
+                yield self.sim.env.timeout(0.1)
 
             (from_x, from_y) = self.trip[from_leg]
             from_arc = self.sim.buckets[from_x][from_y]
@@ -164,11 +208,13 @@ class Car(object):
 
                     if 'decision_node' in self.sim.graph.node[y]:
 
-                        route = self.__route(self.trip[to_leg][1], self.end_node)
+                        self.needs_reroute = True
 
-                        new_trip = []
-                        new_trip.extend(self.actual_trip)
-                        new_trip.extend(route)
+                        # route = self.__route(self.trip[to_leg][1], self.end_node)
+
+                        # new_trip = []
+                        # new_trip.extend(self.actual_trip)
+                        # new_trip.extend(route)
 
                         # print('New route: %s' % route)
 
@@ -177,7 +223,7 @@ class Car(object):
                             # print('Old trip: %s' % self.trip)
                             # print('So far: %s' % self.actual_trip)
                             # print('Route: %s' % route)
-                        self.trip = new_trip
+                        # self.trip = new_trip
 
                 # pick the next leg, and start over
                 to_leg += 1

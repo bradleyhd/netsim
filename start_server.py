@@ -18,6 +18,10 @@ def generate(n):
 def route(start, end):
   return json.dumps(server.route(int(start), int(end)))
 
+@app.route('/route/random')
+def route_random():
+  return json.dumps(server.generate_random())
+
 @app.route('/stats')
 def stats():
   return json.dumps(server._stats_data)

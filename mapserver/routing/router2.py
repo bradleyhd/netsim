@@ -15,21 +15,18 @@ class Router():
         self.G = G
         self.weight_label = weight_label
 
-        self.short_path = []
-        self.touch_path_fwd = []
-        self.touch_path_bwd = []
         self.decision_map = decision_map
         self.exact = True
         self.opt = 0
 
     def route(self, start_node, end_node):
 
-        # timer = Timer(__name__, 'debug')
-        # timer.start('Routing %s->%s' % (start_node, end_node))
+        timer = Timer(__name__, 'debug')
+        timer.start('Routing %s->%s' % (start_node, end_node))
 
         path = self._bidirectional_dijkstra(start_node, end_node)
         
-        # timer.stop()
+        timer.stop()
 
         return path
 
@@ -160,32 +157,10 @@ class Router():
 
         if best_node is None: return []
 
-        # if not self.exact:
-        #     choices = []
-        #     #print(all_nodes)
-        #     for key in sorted(all_nodes, key=all_nodes.get):
-        #         choices.append(key)
-        #     #print(choices)
-
-        #     if len(choices) < 1:
-        #         return []
-        
-        #     #best_node = random.choice(choices[0:2])
-        #     best_node = choices[self.opt]
-
         route =  self.__path_unpack(source[0], start_node, best_node) + self.__path_unpack(source[1], end_node, best_node, forwards_search = False)
 
-        # if not self.exact:
-
-        #     #experimental cycle detection
-        #     route = self.__scrub_cycles(route)    
-
-        # for i in range(len(route)-1):
-        #     (x, y) = route[i]
-        #     (x1, y1) = route[i+1]
-        #     rd = self.G[x][y].get('name', '?')
-        #     nrd = self.G[x1][y1].get('name', '?')
-        #     print('%d %d: %s->%s' % (x, y, rd, nrd))
+        # route = route[0:1]
+        # print(route)
 
         if self.decision_map:
             tmp_route = []
@@ -263,10 +238,8 @@ class Router():
             previous_node = previous[current_node][1]
 
             if forwards_search:
-                self.short_path.extend([(previous_node, current_node)])
                 full_path = self.__uncontract_forwards(current_node, previous_node)
             else:
-                self.short_path.extend([(current_node, previous_node)])
                 full_path = self.__uncontract_backwards(current_node, previous_node)
                 
 

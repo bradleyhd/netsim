@@ -1,12 +1,13 @@
 {
-    "num_cars": 100,
-    "cars_per_min": 100,
-    "sim_duration": 1800,
+    "num_cars": 1000,
+    "cars_per_min": 1000,
+    "sim_duration": 900,
     "num_bottlenecks": 20,
     "bottleneck_factor": 30,
 
     "realtime": false,
     "realtime_factor": 10,
+    "threads": 2,
 
     "use_decision_graph": true,
     "use_fast_contract": true,

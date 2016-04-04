@@ -1,8 +1,9 @@
-import argparse, json, logging, random, datetime, os.path, pickle, copy
+import argparse, json, logging, random, datetime, os.path, pickle, copy, requests
 import networkx as nx
 import time as time
 import matplotlib.pyplot as plt
 import numpy as np
+import urllib.request
 from mapserver.routing.server import Server
 
 from networkx.readwrite import json_graph
@@ -26,13 +27,32 @@ if config['use_decision_graph']:
 else:
   config['graph_file'] = 'data/%s.graph' % args.graph_file
 
-server = Server(config)
+def get_route(i):
+    with urllib.request.urlopen(config['routing_server_url'] + '/route/random') as conn:
+        return conn.read()
+
+routes = []
+
+import concurrent
+with concurrent.futures.ThreadPoolExecutor(max_workers=config['threads']) as executor:
+
+    # Start the load operations and mark each future with its URL
+    future_to_url = {executor.submit(get_route, i): i for i in range(config['num_cars'])}
+    for future in concurrent.futures.as_completed(future_to_url):
+        url = future_to_url[future]
+        try:
+            data = future.result()
+            route = json.loads(data.decode(encoding='UTF-8'))
+            routes.append(route)
+            
+        except Exception as exc:
+            print('%r generated an exception: %s' % (url, exc))
 
 config = copy.deepcopy(config)
 config['graph_file'] = 'data/%s.graph' % args.graph_file
 
 config['adaptive_routing'] = False
-sim = Sim(server, config)
+sim = Sim(config, routes)
 sim.setup()
 history1 = sim.run()
 cars1 = []
@@ -80,7 +100,10 @@ f.write(json.dumps(speedups))
 f.write('\n')
 f.close()
 
-print(np.mean(speedups))
+if speedups:
+  print(np.mean(speedups))
+else:
+  print('no cars finished')
 
 # plt.plot(xs, ys, 'r+')
 
