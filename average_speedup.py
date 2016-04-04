@@ -54,22 +54,33 @@ for car in sim.cars:
     'done': car.done
   })
 
-xs = []
-ys = []
+cars = []
+before_times = []
+after_times = []
+speedups = []
 for i in range(len(cars2)):
   if cars1[i]['done'] and cars2[i]['done']:
+    
+    before_times.append(cars1[i]['driving_time'])
+    after_times.append(cars2[i]['driving_time'])
+
+    cars.append(cars1[i]['id']);
     speedup = (cars1[i]['driving_time'] - cars2[i]['driving_time'])
-    xs.append(cars1[i]['id']);
-    ys.append(speedup)
+    speedups.append(speedup)
     # print('%d: %.2f\t%.2f\t%s' % (i, cars1[i]['driving_time'], cars2[i]['driving_time'], cars1[i]['driving_time'] == cars2[i]['driving_time']))
 
 f = open('results.txt', 'w')
-f.write(json.dumps(xs))
+f.write(json.dumps(cars))
 f.write('\n')
-f.write(json.dumps(ys))
+f.write(json.dumps(before_times))
+f.write('\n')
+f.write(json.dumps(after_times))
+f.write('\n')
+f.write(json.dumps(speedups))
+f.write('\n')
 f.close()
 
-print(np.mean(ys))
+print(np.mean(speedups))
 
 # plt.plot(xs, ys, 'r+')
 
