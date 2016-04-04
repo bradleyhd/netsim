@@ -96,8 +96,8 @@ class Server():
 
   def generate(self, n):
 
-    x = np.random.choice(self.graphs[self.switch], n)
-    y = np.random.choice(self.graphs[self.switch], n)
+    x = np.random.choice(self.graphs[self.switch].nodes(), n)
+    y = np.random.choice(self.graphs[self.switch].nodes(), n)
     # x = [6793] * n
     # y = [3535] * n
 
