@@ -166,10 +166,20 @@ class Sim:
 
     while True:
 
-      pct = self.env.now / self._config['sim_duration']
-      print('%0.4f%%' % pct)
+      if self.env.now > 0:
 
-      yield self.env.timeout(10)
+        elapsed = datetime.now() - self.setup_time
+        tps = elapsed / self.env.now
+        steps_remaining = self._config['sim_duration'] - self.env.now
+        est = steps_remaining * tps
+
+        hours, remainder = divmod(est.seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+
+        pct = self.env.now / self._config['sim_duration']
+        print('\r%0.4f%% %dh%dm%ds left' % (pct, hours, minutes, seconds), end = '')
+
+      yield self.env.timeout(5)
 
   def setup(self):
     """Prepares a simulation for use before a run"""
