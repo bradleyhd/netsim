@@ -1,11 +1,12 @@
-import argparse, json, logging, random, datetime, os.path, pickle
+import argparse, json, logging, random, datetime, os.path, pickle, copy
 import networkx as nx
 import time as time
 import matplotlib.pyplot as plt
 import numpy as np
+from mapserver.routing.server import Server
 
 from networkx.readwrite import json_graph
-from mapsim.simulation.sim import Sim
+from mapsim.simulation.sim2 import Sim
 from copy import deepcopy
 
 parser = argparse.ArgumentParser(description='Draws a graph.')
@@ -18,14 +19,20 @@ config = {}
 with open('config.json', 'r') as file:
     config = json.load(file)
 
+if config['use_decision_graph']:
+  config['graph_file'] = 'data/%s.decision.graph' % args.graph_file
+  config['sim_file'] = 'data/%s.sim' % args.graph_file
+  config['reference_graph_file'] = 'data/%s.graph' % args.graph_file
+else:
+  config['graph_file'] = 'data/%s.graph' % args.graph_file
+
+server = Server(config)
+
+config = copy.deepcopy(config)
 config['graph_file'] = 'data/%s.graph' % args.graph_file
 
-sim_data = {}
-with open('data/' + args.graph_file + '.sim', 'rb') as file:
-    sim_data = pickle.load(file)
-
 config['adaptive_routing'] = False
-sim = Sim(config, sim_data['segments'])
+sim = Sim(server, config)
 sim.setup()
 history1 = sim.run()
 cars1 = []
@@ -59,6 +66,8 @@ for i in range(len(cars2)):
 f = open('results.txt', 'w')
 f.write(json.dumps(ys))
 f.close()
+
+print(np.mean(ys))
 
 # plt.plot(xs, ys, 'r+')
 

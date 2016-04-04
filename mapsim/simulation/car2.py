@@ -46,14 +46,16 @@ class Car(object):
 
     def __route(self, start, end):
 
-        res = requests.get('%s/route/%d/%d' % (self.sim._config['routing_server_url'], start, end))
-        route = res.json()
+        # res = requests.get('%s/route/%d/%d' % (self.sim._config['routing_server_url'], start, end))
+        # route = res.json()
+        route = self.sim.server.route(start, end)
         
         return route
 
     def __report(self, start, end, duration):
 
-        res = requests.get('%s/report/%d/%d/%f' % (self.sim._config['routing_server_url'], start, end, duration))
+        # res = requests.get('%s/report/%d/%d/%f' % (self.sim._config['routing_server_url'], start, end, duration))
+        self.sim.server.report(start, end, duration)
 
     def __look(self, leg, cell, distance):
 
