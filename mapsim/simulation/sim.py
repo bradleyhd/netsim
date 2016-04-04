@@ -10,7 +10,7 @@ from mapsim.simulation.signal import Signal
 
 class Sim:
 
-  def __init__(self, config, buckets, routes):
+  def __init__(self, config, buckets):
 
     self.__log = logging.getLogger(__name__)
     self._config = config
@@ -33,7 +33,7 @@ class Sim:
     self.bottlenecks = self.__generate_bottlenecks()
     # self.trips = self.__generate_trips()
     self.buckets = buckets
-    self.routes = routes
+    # self.routes = routes
 
     # compute delays
     delay_window = (self.num_cars * 60) / self._config['cars_per_min']
@@ -136,9 +136,12 @@ class Sim:
     self.__log.debug('Adding cars and calculating intial routes...')
     cars = []
 
+    res = requests.get('http://localhost:5000/routes/generate/%d' % (self.num_cars))
+    routes = res.json()
+
     for i in range(0, self.num_cars):
 
-      c = Car(i, self, self.delays[i], self.routes[i])
+      c = Car(i, self, self.delays[i], routes[i])
       cars.append(c)
 
     return cars
