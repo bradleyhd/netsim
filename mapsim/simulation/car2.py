@@ -12,6 +12,9 @@ class Car(object):
         self.graph = sim.graph
         
         self.id = id
+
+        self.order = -1
+
         self.delay = delay
         self.trip = trip
         self.actual_trip = []
@@ -102,7 +105,10 @@ class Car(object):
 
         # wait to start
         #if self.id > 0:
-        #yield self.sim.env.timeout(self.delay)
+        yield self.sim.env.timeout(self.delay)
+
+        self.order = self.sim.orderer
+        self.sim.orderer += 1
 
         from_leg = -1
         from_cell = -1

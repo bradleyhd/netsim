@@ -16,6 +16,7 @@ class Sim:
     self.__log = logging.getLogger(__name__)
     self._config = config
     self.server = server
+    self.orderer = 0
 
     # load graph from file
     file_path = self._config['graph_file']

@@ -38,7 +38,7 @@ history1 = sim.run()
 cars1 = []
 for car in sim.cars:
   cars1.append({
-    'id': car.id,
+    'id': car.order,
     'driving_time': car.total_driving_time,
     'done': car.done
   })
@@ -49,7 +49,7 @@ history2 = sim.run()
 cars2 = []
 for car in sim.cars:
   cars2.append({
-    'id': car.id,
+    'id': car.order,
     'driving_time': car.total_driving_time,
     'done': car.done
   })
@@ -59,11 +59,13 @@ ys = []
 for i in range(len(cars2)):
   if cars1[i]['done'] and cars2[i]['done']:
     speedup = (cars1[i]['driving_time'] - cars2[i]['driving_time'])
-    xs.append(i);
+    xs.append(cars1[i]['id']);
     ys.append(speedup)
     # print('%d: %.2f\t%.2f\t%s' % (i, cars1[i]['driving_time'], cars2[i]['driving_time'], cars1[i]['driving_time'] == cars2[i]['driving_time']))
 
 f = open('results.txt', 'w')
+f.write(json.dumps(xs))
+f.write('\n')
 f.write(json.dumps(ys))
 f.close()
 
