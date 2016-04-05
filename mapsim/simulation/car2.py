@@ -33,6 +33,7 @@ class Car(object):
         self.leg = -1
         self.cell = -1
 
+        self.report_queue = []
         self.needs_reroute = False
         self.history = [] 
         self.total_driving_time = 0  
@@ -57,8 +58,15 @@ class Car(object):
         
         return route
 
+    # def send_reports(self):
+    #     while len(self.report_queue):
+    #         start, end, duration = self.report_queue.pop()
+    #         res = requests.get('%s/report/%d/%d/%f' % (self.sim._config['routing_server_url'], start, end, duration))
+
     def __report(self, start, end, duration):
 
+        # pass
+        # self.report_queue.append((start, end, duration))
         # res = requests.get('%s/report/%d/%d/%f' % (self.sim._config['routing_server_url'], start, end, duration))
         self.sim.server.report(start, end, duration)
 
@@ -100,6 +108,37 @@ class Car(object):
             entry = (lon, lat, abs_time.isoformat())
             self.history.append(entry)
 
+    # def reroute(self):
+
+    #     (x, y) = self.trip[self.leg]
+
+    #     # print('reroute car %s on %s->%s' % (self.id, x, y))
+    #     # print(self.leg)
+
+        
+    #     # print('old route:   %s' % self.trip)
+    #     # print('Trip so far: %s' % self.actual_trip)
+        
+    #     # print('decision_node' in self.sim.graph.node[y])
+
+    #     new_route = self.__route(y, self.end_node)
+
+    #     # print('new route    %s' % new_route)
+
+        
+        
+        
+    #     new_trip = self.actual_trip + new_route
+
+    #     # if new_trip != self.trip:
+            
+    #     #     print(new_trip)
+    #     #     print(self.trip)
+    #     #     print('*************** rerouting: %s' % self.id)
+
+    #     self.trip = new_trip
+    #     self.needs_reroute = False
+
     def run(self):
 
         if len(self.trip) == 0:
@@ -125,8 +164,8 @@ class Car(object):
         i = 0
         while True:
 
-            if self.needs_reroute:
-                yield self.env.timeout(self.sim._config['driver_reaction_time_s'])
+            # if self.needs_reroute:
+            #     yield self.env.timeout(self.sim._config['driver_reaction_time_s'])
 
             # print('----------')
             # print('Car %s attempting %s:%s->%s:%s' % (self.id, from_leg, from_cell, to_leg, to_cell))
@@ -171,20 +210,20 @@ class Car(object):
 
                         self.needs_reroute = True
 
-                        # route = self.__route(self.trip[to_leg][1], self.end_node)
+                        route = self.__route(self.trip[to_leg][1], self.end_node)
 
-                        # new_trip = []
-                        # new_trip.extend(self.actual_trip)
-                        # new_trip.extend(route)
+                        new_trip = []
+                        new_trip.extend(self.actual_trip)
+                        new_trip.extend(route)
 
-                        # # print('New route: %s' % route)
+                        # print('New route: %s' % route)
 
-                        # # if (new_trip != self.trip):
-                        #     # print('Rerouting %s' % self.id)
-                        #     # print('Old trip: %s' % self.trip)
-                        #     # print('So far: %s' % self.actual_trip)
-                        #     # print('Route: %s' % route)
-                        # self.trip = new_trip
+                        # if (new_trip != self.trip):
+                            # print('Rerouting %s' % self.id)
+                            # print('Old trip: %s' % self.trip)
+                            # print('So far: %s' % self.actual_trip)
+                            # print('Route: %s' % route)
+                        self.trip = new_trip
 
                 # pick the next leg, and start over
                 to_leg += 1

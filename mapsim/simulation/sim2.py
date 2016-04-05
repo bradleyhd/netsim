@@ -2,7 +2,7 @@ import networkx as nx
 import numpy as np
 import simpy as simpy
 import time as time
-import logging, json, collections, requests, pickle
+import logging, json, collections, requests, pickle, concurrent
 from networkx.readwrite import json_graph as imports
 from datetime import datetime
 from mapsim.simulation.car2 import Car
@@ -153,10 +153,6 @@ class Sim:
 
     return cars
 
-  def __reroute(self, car):
-
-    car.reroute()
-
   def __rerouter(self):
 
     import concurrent
@@ -175,7 +171,7 @@ class Sim:
       #         print('%r generated an exception: %s' % (url, exc))
               # sys.exit()
 
-      cars = [car for car in self.cars if car.needs_reroute == True]
+      cars = list([car for car in self.cars if car.needs_reroute == True])
       with concurrent.futures.ProcessPoolExecutor() as executor:
         executor.map(self.__reroute, cars)
 
@@ -202,7 +198,7 @@ class Sim:
       #       print('%r generated an exception: %s' % (url, exc))
       #       sys.exit()
       with concurrent.futures.ProcessPoolExecutor() as executor:
-        executor.map(self.__report, [car for car in self.cars])
+        executor.map(self.__report, list([car for car in self.cars])) 
 
       yield self.env.timeout(0.5)
 
@@ -275,8 +271,8 @@ class Sim:
 
     if self._config['adaptive_routing']:
       self.env.process(self.__graph_updater())
-      self.env.process(self.__rerouter())
-      self.env.process(self.__reporter())
+      # self.env.process(self.__rerouter())
+      # self.env.process(self.__reporter())
 
     self.env.process(self.progress_watcher())
 

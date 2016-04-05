@@ -44,7 +44,7 @@ def run(config):
   config = copy.deepcopy(config)
   config['graph_file'] = 'data/%s.graph' % args.graph_file
 
-  config['adaptive_routing'] = False
+  config['adaptive_routing'] = True
   sim = Sim(server, config, routes)
   sim.setup()
   history1 = sim.run()

@@ -1,6 +1,6 @@
 {
-    "num_cars": 1000,
-    "cars_per_min": 100,
+    "num_cars": 10000,
+    "cars_per_min": 1000,
     "sim_duration": 1800,
     "num_bottlenecks": 20,
     "bottleneck_factor": 30,
