@@ -102,8 +102,8 @@ class Server():
     # y = 2010
 
     #duch
-    x = 27554
-    y = 1225
+    # x = 27554
+    # y = 1225
     return self.route(x, y)
 
   def generate(self, n):
