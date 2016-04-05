@@ -11,12 +11,13 @@ from mapserver.routing.server import Server
 
 class Sim:
 
-  def __init__(self, server, config):
+  def __init__(self, server, config, routes):
 
     self.__log = logging.getLogger(__name__)
     self._config = config
     self.server = server
     self.orderer = 0
+    self.routes = routes
 
     # load graph from file
     file_path = self._config['graph_file']
@@ -143,11 +144,11 @@ class Sim:
 
     # res = requests.get('http://localhost:5000/routes/generate/%d' % (self.num_cars))
     # routes = res.json()
-    routes = self.server.generate(self.num_cars)
+    # routes = self.server.generate(self.num_cars)
 
     for i in range(0, self.num_cars):
 
-      c = Car(i, self, self.delays[i], routes[i])
+      c = Car(i, self, self.delays[i], self.routes[i])
       cars.append(c)
 
     return cars
