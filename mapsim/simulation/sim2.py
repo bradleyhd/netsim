@@ -159,20 +159,25 @@ class Sim:
 
   def __rerouter(self):
 
+    import concurrent
     while True:
       
-      with concurrent.futures.ThreadPoolExecutor(max_workers=self._config['threads']) as executor:
+      # with concurrent.futures.ThreadPoolExecutor(max_workers=self._config['threads']) as executor:
 
-        # Start the load operations and mark each future with its URL
-        future_to_url = {executor.submit(self.__reroute, car): car for car in self.cars if car.needs_reroute == True}
-        for future in concurrent.futures.as_completed(future_to_url):
-          url = future_to_url[future]
-          try:
-              data = future.result()
+      #   # Start the load operations and mark each future with its URL
+      #   future_to_url = {executor.submit(self.__reroute, car): car for car in self.cars if car.needs_reroute == True}
+      #   for future in concurrent.futures.as_completed(future_to_url):
+      #     url = future_to_url[future]
+      #     try:
+      #         data = future.result()
             
-          except Exception as exc:
-              print('%r generated an exception: %s' % (url, exc))
-              sys.exit()
+      #     except Exception as exc:
+      #         print('%r generated an exception: %s' % (url, exc))
+              # sys.exit()
+
+      cars = [car for car in self.cars if car.needs_reroute == True]
+      with concurrent.futures.ProcessPoolExecutor() as executor:
+        executor.map(self.__reroute, cars)
 
       yield self.env.timeout(0.1)
 
@@ -184,18 +189,20 @@ class Sim:
 
     while True:
 
-      with concurrent.futures.ThreadPoolExecutor(max_workers=self._config['threads']) as executor:
+      # with concurrent.futures.ThreadPoolExecutor(max_workers=self._config['threads']) as executor:
 
-        # Start the load operations and mark each future with its URL
-        future_to_url = {executor.submit(self.__report, car): car for car in self.cars}
-        for future in concurrent.futures.as_completed(future_to_url):
-          url = future_to_url[future]
-          try:
-            data = future.result()
+      #   # Start the load operations and mark each future with its URL
+      #   future_to_url = {executor.submit(self.__report, car): car for car in self.cars}
+      #   for future in concurrent.futures.as_completed(future_to_url):
+      #     url = future_to_url[future]
+      #     try:
+      #       data = future.result()
             
-          except Exception as exc:
-            print('%r generated an exception: %s' % (url, exc))
-            sys.exit()
+      #     except Exception as exc:
+      #       print('%r generated an exception: %s' % (url, exc))
+      #       sys.exit()
+      with concurrent.futures.ProcessPoolExecutor() as executor:
+        executor.map(self.__report, [car for car in self.cars])
 
       yield self.env.timeout(0.5)
 

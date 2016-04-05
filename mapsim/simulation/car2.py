@@ -33,12 +33,14 @@ class Car(object):
         self.leg = -1
         self.cell = -1
 
+        self.needs_reroute = False
         self.history = [] 
         self.total_driving_time = 0  
         self.done = False
 
     def reset(self):
 
+        self.needs_reroute = False
         self.actual_trip = []
         self.current_speed = 0
         self.leg = -1
@@ -123,6 +125,9 @@ class Car(object):
         i = 0
         while True:
 
+            if self.needs_reroute:
+                yield self.env.timeout(self.sim._config['driver_reaction_time_s'])
+
             # print('----------')
             # print('Car %s attempting %s:%s->%s:%s' % (self.id, from_leg, from_cell, to_leg, to_cell))
 
@@ -164,20 +169,22 @@ class Car(object):
 
                     if 'decision_node' in self.sim.graph.node[y]:
 
-                        route = self.__route(self.trip[to_leg][1], self.end_node)
+                        self.needs_reroute = True
 
-                        new_trip = []
-                        new_trip.extend(self.actual_trip)
-                        new_trip.extend(route)
+                        # route = self.__route(self.trip[to_leg][1], self.end_node)
 
-                        # print('New route: %s' % route)
+                        # new_trip = []
+                        # new_trip.extend(self.actual_trip)
+                        # new_trip.extend(route)
 
-                        # if (new_trip != self.trip):
-                            # print('Rerouting %s' % self.id)
-                            # print('Old trip: %s' % self.trip)
-                            # print('So far: %s' % self.actual_trip)
-                            # print('Route: %s' % route)
-                        self.trip = new_trip
+                        # # print('New route: %s' % route)
+
+                        # # if (new_trip != self.trip):
+                        #     # print('Rerouting %s' % self.id)
+                        #     # print('Old trip: %s' % self.trip)
+                        #     # print('So far: %s' % self.actual_trip)
+                        #     # print('Route: %s' % route)
+                        # self.trip = new_trip
 
                 # pick the next leg, and start over
                 to_leg += 1
