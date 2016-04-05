@@ -35,11 +35,11 @@ class Router():
 
     def _backwards_neighbors(self, node):
 
-        return ((n, edge[self.weight_label]) for n, edge in self.G.pred[node].items() if 'down' in edge)
+        return ((n, edge[self.weight_label]) for n, edge in self.G.pred[node].items())
 
     def _forwards_neighbors(self, node):
 
-        return ((n, edge[self.weight_label]) for n, edge in self.G.succ[node].items() if 'up' in edge)
+        return ((n, edge[self.weight_label]) for n, edge in self.G.succ[node].items())
 
     def _neighbors(self, r, node):
 
@@ -118,34 +118,43 @@ class Router():
 
         stalled_count = 0
 
+        r = 0
         # while the queues are not empty
-        while qs[0] or qs[1]:
+        while qs[r]:
+
 
             # if the smallest cost to node in either queue is bigger than the
             # shortest path distance, we can halt
             # if best_dist <= min(qs[0][0][0] if len(qs[0]) > 0 else sys.maxsize, qs[1][0][0] if len(qs[1]) > 0 else sys.maxsize): break
-            if best_dist <= (qs[0][0][0] if len(qs[0]) > 0 else 0) + (qs[1][0][0] if len(qs[1]) > 0 else 0): break
 
             # if the other queue is not empty, switch directions
-            if qs[1 - r]: r = 1 - r
+            # if qs[1 - r]: r = 1 - r
+
+            # if r == 1:
+            #     continue
 
             # pop the minimum node
             dist_to_u, u = heappop(qs[r])
 
+            if u == end_node:
+                break
+
             # if node has been settled by both searches
-            if u in source[1 - r]:
+            # if u in source[1 - r]:
 
-                # best candidate distance is the min of the previous best
-                # candidate and the path through u
-                dist_via_u = dist_to_u + source[1-r][u][0]
-                all_nodes[u] = dist_via_u
+            #     # best candidate distance is the min of the previous best
+            #     # candidate and the path through u
+            #     dist_via_u = dist_to_u + source[1-r][u][0]
+            #     all_nodes[u] = dist_via_u
 
-                if dist_via_u < best_dist:
-                    best_dist = dist_via_u
-                    best_node = u
+            #     if dist_via_u < best_dist:
+            #         best_dist = dist_via_u
+            #         best_node = u
 
             # search
             for v, edge_dist in neighbors(r, u):
+
+                self.G[u][v]['touched'] = True
 
                 # if v has not been settled or a shorter path has been found
                 if v not in source[r] or dist_to_u + edge_dist < source[r][v][0]:
@@ -159,7 +168,7 @@ class Router():
                     # update the dictionary to link current -> neighbor
                     source[r][v] = (dist_to_v_via_u, u)
 
-        if best_node is None: return []
+        # if best_node is None: return []
 
         # if not self.exact:
         #     choices = []
@@ -174,7 +183,7 @@ class Router():
         #     #best_node = random.choice(choices[0:2])
         #     best_node = choices[self.opt]
 
-        route =  self.__path_unpack(source[0], start_node, best_node) + self.__path_unpack(source[1], end_node, best_node, forwards_search = False)
+        route =  self.__path_unpack(source[0], start_node, end_node) # + self.__path_unpack(source[1], end_node, best_node, forwards_search = False)
 
         # if not self.exact:
 
@@ -188,16 +197,16 @@ class Router():
         #     nrd = self.G[x1][y1].get('name', '?')
         #     print('%d %d: %s->%s' % (x, y, rd, nrd))
 
-        if self.decision_map:
-            tmp_route = []
+        # if self.decision_map:
+        #     tmp_route = []
 
-            for x, y in route:
-                if (x, y) in self.decision_map:
-                    tmp_route.extend(self.decision_map[(x, y)])
-                else:
-                    tmp_route.extend([(x, y)])
+        #     for x, y in route:
+        #         if (x, y) in self.decision_map:
+        #             tmp_route.extend(self.decision_map[(x, y)])
+        #         else:
+        #             tmp_route.extend([(x, y)])
 
-            return tmp_route
+        #     return tmp_route
 
         return route
 

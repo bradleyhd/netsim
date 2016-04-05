@@ -84,4 +84,5 @@ celerybeat-schedule
 *.pdf
 *.csv
 *.lprof
+*.png
 /data

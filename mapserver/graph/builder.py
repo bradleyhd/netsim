@@ -12,7 +12,7 @@ class GraphBuilder(object):
 
     __tags_to_copy = ['name', 'oneway', 'lanes', 'highway']
 
-    def __init__(self, config, tier=1 ):
+    def __init__(self, config, tier=None):
 
         self.__log = logging.getLogger(__name__)
 
@@ -168,7 +168,7 @@ class GraphBuilder(object):
         # time to traverse in seconds (m * s/m = s)
         ttt = length / ffs
 
-        edge_tags['ttt'] = ttt
+        edge_tags['ttt'] = length
         edge_tags['real_ttt'] = ttt
         edge_tags['default_ttt'] = ttt
 

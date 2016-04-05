@@ -35,11 +35,11 @@ class Router():
 
     def _backwards_neighbors(self, node):
 
-        return ((n, edge[self.weight_label]) for n, edge in self.G.pred[node].items() if 'down' in edge)
+        return ((n, edge[self.weight_label]) for n, edge in self.G.pred[node].items())
 
     def _forwards_neighbors(self, node):
 
-        return ((n, edge[self.weight_label]) for n, edge in self.G.succ[node].items() if 'up' in edge)
+        return ((n, edge[self.weight_label]) for n, edge in self.G.succ[node].items())
 
     def _neighbors(self, r, node):
 
@@ -114,7 +114,7 @@ class Router():
         best_node = None
 
         # store all possible paths
-        all_nodes = {}
+        # all_nodes = {}
 
         stalled_count = 0
 
@@ -124,7 +124,13 @@ class Router():
             # if the smallest cost to node in either queue is bigger than the
             # shortest path distance, we can halt
             # if best_dist <= min(qs[0][0][0] if len(qs[0]) > 0 else sys.maxsize, qs[1][0][0] if len(qs[1]) > 0 else sys.maxsize): break
-            if best_dist <= (qs[0][0][0] if len(qs[0]) > 0 else 0) + (qs[1][0][0] if len(qs[1]) > 0 else 0): break
+            # print('best_dist: %s' % best_dist)
+            # print(qs[0][0][0] if len(qs[0]) > 0 else 0)
+            # print(qs[1][0][0] if len(qs[1]) > 0 else 0)
+            # print((qs[0][0][0] if len(qs[0]) > 0 else 0) + (qs[1][0][0] if len(qs[1]) > 0 else 0))
+            if best_dist <= (qs[0][0][0] if len(qs[0]) > 0 else 0) + (qs[1][0][0] if len(qs[1]) > 0 else 0):
+                print('breaking')
+                break
 
             # if the other queue is not empty, switch directions
             if qs[1 - r]: r = 1 - r
@@ -138,7 +144,7 @@ class Router():
                 # best candidate distance is the min of the previous best
                 # candidate and the path through u
                 dist_via_u = dist_to_u + source[1-r][u][0]
-                all_nodes[u] = dist_via_u
+                # all_nodes[u] = dist_via_u
 
                 if dist_via_u < best_dist:
                     best_dist = dist_via_u
@@ -146,6 +152,11 @@ class Router():
 
             # search
             for v, edge_dist in neighbors(r, u):
+
+                if r == 0:
+                    self.G[u][v]['touched_f'] = True
+                else:
+                    self.G[v][u]['touched_b'] = True
 
                 # if v has not been settled or a shorter path has been found
                 if v not in source[r] or dist_to_u + edge_dist < source[r][v][0]:
