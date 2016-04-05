@@ -99,8 +99,6 @@ class Server():
     x = np.random.choice(self.graphs[self.switch].nodes(), 1)[0]
     y = np.random.choice(self.graphs[self.switch].nodes(), 1)[0]
 
-    print(x, y)
-
     routes = self.route(x, y)
 
     return routes

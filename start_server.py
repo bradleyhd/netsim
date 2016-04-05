@@ -4,6 +4,10 @@ from mapserver.routing.server import Server
 
 app = Flask(__name__)
 
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+
 server = None
 
 @app.route('/')

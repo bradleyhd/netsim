@@ -21,12 +21,12 @@ class Router():
 
     def route(self, start_node, end_node):
 
-        timer = Timer(__name__, 'debug')
-        timer.start('Routing %s->%s' % (start_node, end_node))
+        # timer = Timer(__name__, 'debug')
+        # timer.start('Routing %s->%s' % (start_node, end_node))
 
         path = self._bidirectional_dijkstra(start_node, end_node)
         
-        timer.stop()
+        # timer.stop()
 
         return path
 

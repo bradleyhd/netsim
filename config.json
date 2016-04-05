@@ -7,7 +7,7 @@
 
     "realtime": false,
     "realtime_factor": 10,
-    "threads": 2,
+    "threads": 4,
 
     "use_decision_graph": true,
     "use_fast_contract": true,

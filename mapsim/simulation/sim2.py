@@ -182,7 +182,7 @@ class Sim:
   def __reporter(self):
 
     while True:
-      
+
       with concurrent.futures.ThreadPoolExecutor(max_workers=self._config['threads']) as executor:
 
         # Start the load operations and mark each future with its URL
@@ -196,7 +196,7 @@ class Sim:
             print('%r generated an exception: %s' % (url, exc))
             sys.exit()
 
-      yield self.env.timeout(0.1)
+      yield self.env.timeout(0.5)
 
   def __graph_updater(self):
 
