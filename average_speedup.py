@@ -41,10 +41,13 @@ def run(config):
     for car_id, route in zip(ids, executor.map(get_route, ids)):
       routes.append(route)
 
+  # for id in ids:
+  #   routes.append(server.generate_random())
+
   config = copy.deepcopy(config)
   config['graph_file'] = 'data/%s.graph' % args.graph_file
 
-  config['adaptive_routing'] = True
+  config['adaptive_routing'] = False
   sim = Sim(server, config, routes)
   sim.setup()
   history1 = sim.run()
@@ -93,7 +96,8 @@ def run(config):
   f.write('\n')
   f.close()
 
-  print(np.mean(speedups))
+  if speedups:
+    print(np.mean(speedups))
 
   # plt.plot(xs, ys, 'r+')
 

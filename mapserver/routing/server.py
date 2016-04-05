@@ -98,6 +98,12 @@ class Server():
 
     x = np.random.choice(self.graphs[self.switch].nodes(), 1)[0]
     y = np.random.choice(self.graphs[self.switch].nodes(), 1)[0]
+    # x = 322
+    # y = 2010
+
+    #duch
+    x = 27554
+    y = 1225
     return self.route(x, y)
 
   def generate(self, n):
@@ -131,6 +137,11 @@ class Server():
       timer.stop()
 
     return {'ok': True }
+
+  def report_bulk(self, updates):
+
+    for start, end, duration in updates:
+      self.reports[(start, end)].append(duration)
 
   def report(self, start, end, duration, graph_update_frequency=None):
 

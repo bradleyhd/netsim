@@ -12,7 +12,7 @@ class GraphBuilder(object):
 
     __tags_to_copy = ['name', 'oneway', 'lanes', 'highway']
 
-    def __init__(self, config, tier=None):
+    def __init__(self, config, tier=1 ):
 
         self.__log = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class GraphBuilder(object):
 
         self.__tier = tier
         self.__tiers = {
-            1: ['motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link'],
+            1: ['motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary', 'secondary_link', 'tertiary', 'tertiary_link'],
             2: ['secondary', 'secondary_link', 'tertiary', 'tertiary_link', 'road'],
             3: ['residential']
         }

@@ -177,10 +177,6 @@ class Sim:
 
       yield self.env.timeout(0.1)
 
-  def __report(self, car):
-
-    car.send_reports()
-
   def __reporter(self):
 
     while True:
@@ -197,11 +193,19 @@ class Sim:
       #     except Exception as exc:
       #       print('%r generated an exception: %s' % (url, exc))
       #       sys.exit()
-      with concurrent.futures.ProcessPoolExecutor() as executor:
-        executor.map(self.__report, list([car for car in self.cars])) 
+      # with concurrent.futures.ProcessPoolExecutor() as executor:
+      #   executor.map(self.__report, list([car for car in self.cars]))
 
-      yield self.env.timeout(0.5)
+      reports = []
+      for car in self.cars:
+        reports.extend(car.report_queue)
+        car.report_queue = []
 
+      self.server.report_bulk(reports)
+
+      yield self.env.timeout(5)
+
+  # @profile
   def __graph_updater(self):
 
     while True:
@@ -210,6 +214,7 @@ class Sim:
       self.server.update()
       yield self.env.timeout(self._config['adaptive_routing_updates_s'])
 
+  # @profile
   def location_watcher(self):
 
     while True:
@@ -219,6 +224,7 @@ class Sim:
 
       yield self.env.timeout(self._config['location_history_poll_s'])
 
+  # @profile
   def progress_watcher(self):
 
     while True:
@@ -226,15 +232,15 @@ class Sim:
       if self.env.now > 0:
 
         elapsed = datetime.now() - self.setup_time
-        tps = elapsed / self.env.now
+        sps = self.env.now / elapsed.total_seconds()
+        # tps = elapsed / self.env.now
         steps_remaining = self._config['sim_duration'] - self.env.now
-        est = steps_remaining * tps
-
-        hours, remainder = divmod(est.seconds, 3600)
+        est = steps_remaining / sps
+        hours, remainder = divmod(est, 3600)
         minutes, seconds = divmod(remainder, 60)
 
-        pct = self.env.now / self._config['sim_duration']
-        print('\r%0.4f%% %dh%dm%ds left' % (pct, hours, minutes, seconds), end = '')
+        # pct = self.env.now / self._config['sim_duration']
+        print('\rsteps: %d /sec: %0.2f %dh%dm%ds' % (self.env.now, sps, hours, minutes, seconds), end = '')
 
       yield self.env.timeout(5)
 

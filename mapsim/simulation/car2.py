@@ -38,9 +38,11 @@ class Car(object):
         self.history = [] 
         self.total_driving_time = 0  
         self.done = False
+        self.decision_count = 0
 
     def reset(self):
 
+        self.decision_count = 0
         self.needs_reroute = False
         self.actual_trip = []
         self.current_speed = 0
@@ -70,29 +72,46 @@ class Car(object):
         # res = requests.get('%s/report/%d/%d/%f' % (self.sim._config['routing_server_url'], start, end, duration))
         self.sim.server.report(start, end, duration)
 
+    def _send_reports(self):
+        for start, end, duration in self.report_queue:
+            self.sim.server.report(start, end, duration)
+
+    #@profile
     def __look(self, leg, cell, distance):
 
         clear = 0
-        count = 0
+        # count = 0
+        # trip = self.trip
+        # sim = self.sim
 
         for x, y in self.trip[leg::]:
 
-            if count == 0:
-                buckets = self.sim.buckets[x][y]['buckets'][cell::]
-            else:
-                buckets = self.sim.buckets[x][y]['buckets']
+            # if count == 0:
+            # buckets = self.sim.buckets[x][y]['buckets'][cell::]
+            # else:
+            #     buckets = self.sim.buckets[x][y]['buckets']
 
-            count += 1
+            # count += 1
 
             #print('%s->%s: %s' % (x, y, buckets))
 
-            for bucket in buckets:
-                if bucket > 0:
+            for bucket in self.sim.buckets[x][y]['buckets'][cell::]:
+
+                # print(clear, distance)
+                if bucket != 0 or clear >= distance:
                     return clear
-                else:
-                    clear += 1
-                    if clear > distance:
-                        return clear
+
+                clear += 1
+
+                # if bucket == 0:
+                #     if clear >= distance:
+                #         return clear
+                #     else:
+                #         clear += 1
+                # else:
+                #     return clear       
+
+            cell = 0
 
         return clear
 
@@ -139,6 +158,7 @@ class Car(object):
     #     self.trip = new_trip
     #     self.needs_reroute = False
 
+    #@profile
     def run(self):
 
         if len(self.trip) == 0:
@@ -160,6 +180,7 @@ class Car(object):
 
         distance = self.sim._config['cell_length_m']
         acceleration = self.sim._config['acceleration_m/s^2']
+        decision_count = 0
 
         i = 0
         while True:
@@ -170,8 +191,8 @@ class Car(object):
             # print('----------')
             # print('Car %s attempting %s:%s->%s:%s' % (self.id, from_leg, from_cell, to_leg, to_cell))
 
-            (from_x, from_y) = self.trip[from_leg]
-            from_arc = self.sim.buckets[from_x][from_y]
+            # (from_x, from_y) = self.trip[from_leg]
+            from_arc = self.sim.buckets[self.trip[from_leg][0]][self.trip[from_leg][1]]
 
             # car has reached end of route
             if to_leg >= len(self.trip):
@@ -184,14 +205,14 @@ class Car(object):
                 self.leg = -1
 
                 self.done = True
-                # print('Car %s done' % self.id)
+                print('Car %s done' % self.id)
 
                 # exit
                 return
 
             # get the set of cells we're driving towards
-            (to_x, to_y) = self.trip[to_leg]
-            to_arc = self.sim.buckets[to_x][to_y]
+            # (to_x, to_y) = self.trip[to_leg]
+            to_arc = self.sim.buckets[self.trip[to_leg][0]][self.trip[to_leg][1]]
 
             # if the target cell is actually on the next leg of the trip
             if to_cell >= len(to_arc['buckets']):
@@ -206,7 +227,9 @@ class Car(object):
                     self.__report(x, y, leg_duration)
                     leg_duration = 0
 
-                    if 'decision_node' in self.sim.graph.node[y]:
+                    if 'decision_node' in self.sim.graph.node[y] and decision_count % 5 == 0:
+
+                        decision_count += 1
 
                         self.needs_reroute = True
 
@@ -218,8 +241,8 @@ class Car(object):
 
                         # print('New route: %s' % route)
 
-                        # if (new_trip != self.trip):
-                            # print('Rerouting %s' % self.id)
+                        if (new_trip != self.trip):
+                            print('Rerouting %s' % self.id)
                             # print('Old trip: %s' % self.trip)
                             # print('So far: %s' % self.actual_trip)
                             # print('Route: %s' % route)
@@ -233,9 +256,10 @@ class Car(object):
 
             # calculate the desired headway
             target_headway = int(self.current_speed / 5)
+            # print(target_headway)
 
             # look ahead to determine the actual headway
-            headway = self.__look(to_leg, to_cell, target_headway)
+            headway = self.__look(to_leg, to_cell, max(1, target_headway))
 
             # print('Current speed: %s' % self.current_speed)
             # print('Target Headway: %s' % target_headway)

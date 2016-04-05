@@ -5,7 +5,7 @@ class CarRerouter():
   def __init__(self):
     pass
 
-  def reroute_cars(cars):
+  def send_reports(reports):
 
     with concurrent.futures.ProcessPoolExecutor() as executor:
         executor.map(CarRerouter.report, cars)
@@ -21,4 +21,4 @@ class CarRerouter():
 
   def report(car):
 
-    car.send_reports()
+    car._send_reports()
