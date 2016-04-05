@@ -153,6 +153,52 @@ class Sim:
 
     return cars
 
+  def __reroute(self, car):
+
+    car.reroute()
+
+  def __rerouter(self):
+
+    while True:
+      
+      with concurrent.futures.ThreadPoolExecutor(max_workers=self._config['threads']) as executor:
+
+        # Start the load operations and mark each future with its URL
+        future_to_url = {executor.submit(self.__reroute, car): car for car in self.cars if car.needs_reroute == True}
+        for future in concurrent.futures.as_completed(future_to_url):
+          url = future_to_url[future]
+          try:
+              data = future.result()
+            
+          except Exception as exc:
+              print('%r generated an exception: %s' % (url, exc))
+              sys.exit()
+
+      yield self.env.timeout(0.1)
+
+  def __report(self, car):
+
+    car.send_reports()
+
+  def __reporter(self):
+
+    while True:
+
+      with concurrent.futures.ThreadPoolExecutor(max_workers=self._config['threads']) as executor:
+
+        # Start the load operations and mark each future with its URL
+        future_to_url = {executor.submit(self.__report, car): car for car in self.cars}
+        for future in concurrent.futures.as_completed(future_to_url):
+          url = future_to_url[future]
+          try:
+            data = future.result()
+            
+          except Exception as exc:
+            print('%r generated an exception: %s' % (url, exc))
+            sys.exit()
+
+      yield self.env.timeout(0.5)
+
   def __graph_updater(self):
 
     while True:
@@ -222,6 +268,8 @@ class Sim:
 
     if self._config['adaptive_routing']:
       self.env.process(self.__graph_updater())
+      self.env.process(self.__rerouter())
+      self.env.process(self.__reporter())
 
     self.env.process(self.progress_watcher())
 
