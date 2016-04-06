@@ -1,7 +1,7 @@
 {
     "num_cars": 1000,
-    "cars_per_min": 50,
-    "sim_duration": 3600,
+    "cars_per_min": 2,
+    "sim_duration": 240,
     "num_bottlenecks": 20,
     "bottleneck_factor": 30,
 
@@ -15,7 +15,7 @@
     "enable_hop_limit": true,
     "hop_limit": 5,
     "search_limit_fraction": 0.0000625,
-    "adaptive_routing": true,
+    "adaptive_routing": false,
     "adaptive_routing_updates_s": 15,
     "graph_weight_label": "ttt",
     "graph_weight_smoothing_factor": 0.5,
@@ -23,15 +23,16 @@
 
     "routing_server_url": "http://localhost:5000",
 
-    "enable_location_history": true,
+    "enable_location_history": false,
     "location_history_poll_s": 1,
 
     "cell_length_m": 5,
-    "speed_stdev_m/s": 2,
+    "speed_stdev_m/s": 3,
     "acceleration_m/s^2": 2.8,
+    "acceleration_stdev_m/s^2": 0.5,
     "driver_reaction_time_s": 0.2,
     
-    "enable_signals": true,
+    "enable_signals": false,
     "green_light_s": 20,
     "yellow_light_s": 5,
     "enable_extended_green": true,

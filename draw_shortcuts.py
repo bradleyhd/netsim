@@ -23,15 +23,14 @@ data_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + args.d
 # build the graph
 factory = GraphBuilder(config)
 graph, decision_graph = factory.from_file(data_file_path, True)
-sim_data = factory.get_sim_data()
 
-decision_graph = graph.copy()
+# decision_graph = graph.copy()
 
-# # contract the decision graph
-# C = GraphContractor(config, decision_graph)
-# C.order_nodes()
-# C.contract_graph()
-# C.set_flags()
+# contract the decision graph
+C = GraphContractor(config, graph)
+C.order_nodes()
+C.contract_graph()
+C.set_flags()
 
 # # write regular graph to file
 # out_file_name = args.saveas + '.graph' if args.saveas else args.data_file + '.graph'
@@ -61,34 +60,41 @@ priorities = {}
 colors = []
 count = 0
 
-plt.figure(num=None, figsize=(16, 12), dpi=300, facecolor='w', edgecolor='k')
+plt.figure(num=None, figsize=(18, 24), dpi=300, facecolor='k', edgecolor='k')
 
 positions = {}
 for node in graph.nodes(data = True):
     positions[node[0]] = (float(node[1]['lon']), float(node[1]['lat']))
 
 reg_edges = []
-up_edges = []
-down_edges = []
-for x, y, data in decision_graph.edges(data = True):
+shortcuts = []
+for x, y, data in graph.edges(data = True):
     if not data['is_shortcut']:
       reg_edges.append((x, y))
+    else:
+      shortcuts.append((x, y))
 
-labels = {}
-for n, d in decision_graph.nodes(data=True):
-  labels[n] = n
+blue = '#5738FF'
+purple = '#E747E7'
+orange = '#E7A725'
+green = '#A1FF47'
+red = '#FF1E43'
+gray = '#333333'
+white = 'w'
 
-props = dict(facecolor='none',edgecolor='none',boxstyle='round')
+# nx.draw_networkx_nodes(graph, pos = positions, nodelist = [start_node], node_color = magenta, linewidths = 0, node_size = 40.0, node_shape = '>')
+# nx.draw_networkx_nodes(graph, pos = positions, nodelist = [end_node], node_color = magenta, linewidths = 0, node_size = 40.0, node_shape = 's')
 
-nx.draw_networkx_nodes(decision_graph, pos = positions, nodelist = decision_graph.nodes(), node_color = 'c', linewidths = 0, node_size = 0.05, node_shape = 'o')
-edge_plot = nx.draw_networkx_edges(decision_graph, pos = positions, edgelist = reg_edges, edge_color = 'w', width = 0.05, alpha = 1.0, arrows = False)
+edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = reg_edges, edge_color = white, width = 1.0, alpha = 1.0, arrows = False)
+edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = shortcuts, edge_color = red, width = 0.5, alpha = 0.7, arrows = False)
+# edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = route, edge_color = magenta, width = 1.0, alpha = 1.0, arrows = False)
 
-edge_plot = nx.draw_networkx_edges(decision_graph, pos = positions, edgelist = up_edges, edge_color = 'r', width = 0.05, alpha = 1.0, arrows = False)
-# edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = down_edges, edge_color = 'b', width = 0.05, alpha = 1.0, arrows = False)
-nx.draw_networkx_labels(decision_graph, pos=positions, labels = labels, font_size=0.25, font_color='w', bbox=props)
-
-plt.axis('on')
-plt.axes().set_aspect('equal', 'datalim')
+plt.axis('off')
+plt.axes().set_aspect('equal')
 plt.axes().set_axis_bgcolor('black')
 
-plt.savefig('test.pdf')
+# plt.axes().set_xlim([-122.4400, -122.3875])
+# # bottom, top
+# plt.axes().set_ylim([37.7600, 37.8000])
+
+plt.savefig('test.png', transparent=True)

@@ -12,17 +12,14 @@ def quadratic(x, a, b, c):
 def exponential(x, a, b, c):
   return a * x**b + c
 
-#plt.figure(num=None, figsize=(16, 12), dpi=300, facecolor='w', edgecolor='k')
-plt.figure()
+fig = plt.figure(num=None, figsize=(12, 8), dpi=300, facecolor='k', edgecolor='k')
 
-xs = [[1490, 4855, 15189, 43427, 138081, 346252, 681587, 1503567], [1490, 4855, 15189, 43427, 138081, 346252, 681587, 1503567], [1490, 4855, 15189, 43427, 138081, 346252, 681587, 1503567], [1490, 4855, 15189, 43427, 138081, 346252, 681587, 1503567]]
-ys = [[0.00027718550018107635, 0.0014051910002308432, 0.0059716799996749614, 0.0091314454998610017, 0.024666515500030073, 0.038507096499870386, 0.058184093000818393, 0.12793981399954646], [0.00029577450004580896, 0.0013283954999678826, 0.0050448135002625349, 0.011782086999573949, 0.027539378500023304, 0.043186980499740457, 0.064648241999748279, 0.12179330999970261], [0.00026476150014786981, 0.0012458404999051709, 0.0046034065003368596, 0.01235319650004385, 0.019788737499766285, 0.028652757000145357, 0.056187490000411344, 0.080005879999589524], [0.00025842550030574785, 0.0010697440002331859, 0.004112398999495781, 0.010342937000132224, 0.028225709000253119, 0.052291365500423126, 0.06639447450015723, 0.12681145349961298]]
+xs = [[1014, 4383, 11821, 37698, 108043, 286563, 672292], [1014, 4383, 11821, 37698, 108043, 286563, 672292], [1014, 4383, 11821, 37698, 108043, 286563, 672292], [1014, 4383, 11821, 37698, 108043, 286563, 672292]]
+ys = [[0.00013309850001519408, 0.00059208550001699223, 0.002604027000003839, 0.004665461000030291, 0.014662985999962075, 0.023410306499954459, 0.041176939000251878], [0.00014861549998101964, 0.00055641999999522795, 0.002577900000005684, 0.0054275369999459144, 0.021226498000032734, 0.029786237500047719, 0.059782716000881919], [0.00012334000000180367, 0.00043368899999052246, 0.0020054734999632728, 0.005848614000001362, 0.014609930999995413, 0.019599954500336025, 0.028973604500606598], [0.00012613299999486571, 0.00044437049999146438, 0.0021501399999692694, 0.0055929929999933847, 0.019908546500118973, 0.039582631500252319, 0.054390303499531001]]
 
-xs = [[1339, 4801, 11417, 35938], [1339, 4801, 11417, 35938], [1339, 4801, 11417, 35938], [1339, 4801, 11417, 35938]]
-ys = [[0.00022390451340470463, 0.00041315201087854803, 0.00099766151106450707, 0.0028064799989806488], [0.00029881100635975599, 0.00056646049779374152, 0.0011518294923007488, 0.0032907499989960343], [9.5045485068112612e-05, 0.00021132850088179111, 0.00055082851031329483, 0.0027407300076447427], [0.00011049500608351082, 0.00028022448532283306, 0.00055881500884424895, 0.002460137999150902]]
-ys = np.array(ys) * 1000000
+ys = np.array(ys) * 1000
 
-def graph(i, label, pt_fmt, ln_fmt):
+def graph(i, label, color, marker, l_marker):
 
   y = np.array(ys[i])
   x = np.array(xs[i])
@@ -31,23 +28,53 @@ def graph(i, label, pt_fmt, ln_fmt):
 
   popt, pcov = curve_fit(exponential, x, y)
 
-  plt.plot(x, y, pt_fmt, label=label)
-  plt.plot(xl, exponential(xl, *popt), ln_fmt)
+  plt.scatter(x, y, label=label, color=color, marker=marker)
+  plt.plot(xl, exponential(xl, *popt), color=color, linestyle=l_marker)
 
-graph(0, 'EDS5 - regular', 'ro', 'r--')
-graph(1, 'D5 - regular', 'bs', 'b--')
-graph(2, 'EDS5 - decision', 'go', 'g--')
-graph(3, 'D5 - decision', 'ms', 'm--')
+blue = '#5738FF'
+purple = '#E747E7'
+orange = '#E7A725'
+green = '#A1FF47'
+red = '#FF1E43'
+gray = '#333333'
+white = 'w'
 
-plt.title('Effects of Node Ordering on 1000 Random Route Queries')
-plt.xlabel('$\\vert V\/\\vert$')
-plt.ylabel('Mean Route Time (us)')
-plt.legend(loc=0, numpoints=1)
+graph(0, 'EDS5 - original graph', red, 'o', '--')
+graph(1, 'N5 - original graph', purple, 's', '--')
+graph(2, 'EDS5 - decision graph', green, 'o', '--')
+graph(3, 'N5 - decision graph', white, 's', '--')
 
-axes = plt.gca()
-axes.set_xscale('log')
+ax = fig.gca()
+plt.title('Effects of Node Ordering on Routing Speed', color=white)
+plt.xlabel('Effective $\\vert V\/\\vert$')
+plt.ylabel('Routing Time (ms)')
+plt.axes().set_axis_bgcolor('black')
+ax.xaxis.label.set_color(white)
+ax.yaxis.label.set_color(white)
+ax.tick_params(axis='x', colors=white)
+ax.tick_params(axis='y', colors=white)
+ax.spines['bottom'].set_color(white)
+ax.spines['top'].set_color(white)
+ax.spines['left'].set_color(white)
+ax.spines['right'].set_color(white)
+legend = plt.legend(loc=0, numpoints=1, framealpha=0.0)
+legend.get_frame().set_facecolor('k')
+
+max_x = np.max(np.array(xs))
+max_y = np.max(np.array(ys))
+min_x = np.min(np.array(xs))
+
+min_y = 0 - (max_y * 0.01)
+min_x = 0 - (max_x * 0.01)
+max_x *= 1.01
+max_y *= 1.01
+plt.axes().set_xlim([min_x, max_x])
+plt.axes().set_ylim([min_y, max_y])
+
+for text in legend.get_texts():
+    text.set_color(white)
 
 # plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
 
-#plt.savefig('nodes_vs_routing_speed.png')
-plt.show()
+plt.savefig('nodes_vs_routing_speed.png', transparent=True)
+#plt.show()

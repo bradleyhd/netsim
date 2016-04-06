@@ -42,7 +42,7 @@ priorities = {}
 colors = []
 count = 0
 
-plt.figure(num=None, figsize=(9, 12), dpi=300, facecolor='k', edgecolor='k')
+plt.figure(num=None, figsize=(18, 24), dpi=300, facecolor='k', edgecolor='k')
 
 positions = {}
 for node in graph.nodes(data = True):
@@ -67,13 +67,21 @@ for n, d in graph.nodes(data=True):
 
 props = dict(facecolor='none',edgecolor='none',boxstyle='round')
 
-nx.draw_networkx_nodes(graph, pos = positions, nodelist = [start_node], node_color = 'lime', linewidths = 0, node_size = 40.0, node_shape = '>')
-nx.draw_networkx_nodes(graph, pos = positions, nodelist = [end_node], node_color = 'lime', linewidths = 0, node_size = 40.0, node_shape = 's')
+blue = '#5738FF'
+purple = '#E747E7'
+orange = '#E7A725'
+green = '#A1FF47'
+red = '#FF1E43'
+gray = '#333333'
+white = 'w'
 
-edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = reg_edges, edge_color = 'w', width = 1.0, alpha = 1.0, arrows = False)
-edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = touchf_edges, edge_color = 'b', width = 1.0, alpha = 1.0, arrows = False)
-edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = touchb_edges, edge_color = 'r', width = 1.0, alpha = 1.0, arrows = False)
-edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = route, edge_color = 'lime', width = 1.0, alpha = 1.0, arrows = False)
+nx.draw_networkx_nodes(graph, pos = positions, nodelist = [start_node], node_color = white, linewidths = 0, node_size = 40.0, node_shape = 'o')
+nx.draw_networkx_nodes(graph, pos = positions, nodelist = [end_node], node_color = white, linewidths = 0, node_size = 40.0, node_shape = 's')
+
+edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = reg_edges, edge_color = gray, width = 1.0, alpha = 1.0, arrows = False)
+edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = touchf_edges, edge_color = blue, width = 1.0, alpha = 1.0, arrows = False)
+edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = touchb_edges, edge_color = green, width = 1.0, alpha = 1.0, arrows = False)
+edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = route, edge_color = white, width = 1.0, alpha = 1.0, arrows = False)
 
 # edge_plot = nx.draw_networkx_edges(graph, pos = positions, edgelist = down_edges, edge_color = 'b', width = 0.05, alpha = 1.0, arrows = False)
 #nx.draw_networkx_labels(decision_graph, pos=positions, labels = labels, font_size=0.25, font_color='w', bbox=props)
@@ -82,8 +90,8 @@ plt.axis('off')
 plt.axes().set_aspect('equal')
 plt.axes().set_axis_bgcolor('black')
 
-plt.axes().set_xlim([-122.5224, -122.3494])
-# bottom, top
-plt.axes().set_ylim([37.6933, 37.8155])
+# plt.axes().set_xlim([-122.5224, -122.3494])
+# # bottom, top
+# plt.axes().set_ylim([37.6933, 37.8155])
 
-plt.savefig('test.png', facecolor='k')
+plt.savefig('test.png', transparent=True)

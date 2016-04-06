@@ -25,10 +25,18 @@ class Car(object):
 
         self.current_speed = 0
 
+        # set variation in target speed aka "speeders"
         if self.sim._config['speed_stdev_m/s'] > 0:
+            np.random.seed()
             self.target_speed_adjustment = np.random.normal(0, self.sim._config['speed_stdev_m/s'])
         else:
             self.target_speed_adjustment = 0
+
+        # set variation in acceleration by car/driver combo
+        if self.sim._config['acceleration_stdev_m/s^2'] > 0:
+            self.acceleration_adjustment = np.random.normal(0, self.sim._config['acceleration_stdev_m/s^2'])
+        else:
+            self.acceleration_adjustment = 0
 
         self.leg = -1
         self.cell = -1
@@ -166,7 +174,7 @@ class Car(object):
 
         # wait to start
         #if self.id > 0:
-        yield self.sim.env.timeout(self.delay)
+        # yield self.sim.env.timeout(self.delay)
 
         self.order = self.sim.orderer
         self.sim.orderer += 1
@@ -179,11 +187,15 @@ class Car(object):
         leg_duration = 0
 
         distance = self.sim._config['cell_length_m']
-        acceleration = self.sim._config['acceleration_m/s^2']
+        acceleration = self.sim._config['acceleration_m/s^2'] + self.acceleration_adjustment
         decision_count = 0
 
         i = 0
         while True:
+
+            # print('---')
+            # print('Hello from Car %s' % self.id)
+            # print('Time is now %s' % self.sim.env.now)
 
             # if self.needs_reroute:
             #     yield self.env.timeout(self.sim._config['driver_reaction_time_s'])
@@ -259,10 +271,10 @@ class Car(object):
             # print(target_headway)
 
             # look ahead to determine the actual headway
-            headway = self.__look(to_leg, to_cell, max(1, target_headway))
+            headway = self.__look(to_leg, to_cell, target_headway + 1)
 
             # print('Current speed: %s' % self.current_speed)
-            # print('Target Headway: %s' % target_headway)
+            # print('Needed Headway: %s' % target_headway)
             # print('Headway: %s' % (headway))
 
             # if there's more headway than needed
@@ -272,16 +284,24 @@ class Car(object):
                 ffs = from_arc['ffs']
                 target_speed = ffs + self.target_speed_adjustment
 
-                if self.id == 0:
-                    target_speed = target_speed / 10
+                # random variations in ability to maintain speed
+                # 50% chance of slowing down 1m/s
+                if target_speed >=1 and random.randint(0, 1) == 0:
+                    target_speed -= 1
+
+                # print('Target speed %s' % (target_speed))
+
+                # if self.id == 0:
+                #     target_speed = target_speed / 10
 
                 # vf = sqrt(vi^2 + 2ax)
                 final_speed = np.sqrt((self.current_speed ** 2) + (2 * acceleration * distance))
+                # print('Final speed would be %s if accelerating' % final_speed)
 
                 # if car reaches target speed this segment
                 if final_speed >= target_speed:
 
-                    # print('Reached Target Speed')
+                    # print('Already Reached Target Speed')
 
                     # solve for distance at which it hits top speed
                     x = (target_speed ** 2 - self.current_speed ** 2)/(2 * acceleration)
@@ -330,6 +350,7 @@ class Car(object):
             elif headway == 0:
 
                 # if there's no headway, re-evaluate in a bit
+                # print('no headway')
                 if headway == 0:
                     t = self.sim._config['driver_reaction_time_s']
                     leg_duration += t
