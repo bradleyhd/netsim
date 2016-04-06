@@ -174,7 +174,7 @@ class Car(object):
 
         # wait to start
         #if self.id > 0:
-        # yield self.sim.env.timeout(self.delay)
+        yield self.sim.env.timeout(self.delay)
 
         self.order = self.sim.orderer
         self.sim.orderer += 1
