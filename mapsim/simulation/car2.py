@@ -193,7 +193,7 @@ class Car(object):
         i = 0
         while True:
 
-            # print('---')
+            # # print('---')
             # print('Hello from Car %s' % self.id)
             # print('Time is now %s' % self.sim.env.now)
 
@@ -283,6 +283,10 @@ class Car(object):
                 # calcuate the driver's desired speed
                 ffs = from_arc['ffs']
                 target_speed = ffs + self.target_speed_adjustment
+
+                # if adjustment means sucha negative that targit is negative
+                if target_speed <= 0:
+                    target_speed = 2
 
                 # random variations in ability to maintain speed
                 # 50% chance of slowing down 1m/s

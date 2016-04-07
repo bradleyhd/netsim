@@ -4,6 +4,7 @@ import time as time
 import matplotlib.pyplot as plt
 import numpy as np
 from mapserver.routing.server import Server
+from matplotlib import colors
 
 from networkx.readwrite import json_graph
 from mapsim.simulation.sim2 import Sim
@@ -38,10 +39,9 @@ def edge_watcher(sim):
     road.extend(sim.buckets[5840][693]['buckets'].copy())
     road.extend(sim.buckets[693][1999]['buckets'].copy())
     road.extend(sim.buckets[1999][792]['buckets'].copy())
-    # print(road)
     logs.append(road.copy())
 
-    yield sim.env.timeout(0.5)
+    yield sim.env.timeout(1)
 
 
 def run(config):
@@ -59,23 +59,50 @@ def run(config):
   sim.env.process(edge_watcher(sim))
   sim.run()
 
+  xs = []
+  ys = []
+
+  for t in range(len(logs)):
+    for p in range(len(logs[t])):
+      if logs[t][p] > 0:
+        ys.append(p)
+        xs.append(t)
+
   import matplotlib.pyplot as plt
   import matplotlib.image as mpimg
   import numpy as np
 
-  # for log in logs:
-  #   print(log)
+  blue = '#5738FF'
+  purple = '#E747E7'
+  orange = '#E7A725'
+  green = '#A1FF47'
+  red = '#FF1E43'
+  gray = '#333333'
+  white = 'w'
 
+  fig = plt.figure(num=None, figsize=(12, 8), dpi=300, facecolor='k', edgecolor='k')
+  ax = fig.gca()
+  plt.title('Nagel–Schreckenberg Flow Model', color=white)
 
-  # print(np.array(logs))
-  # print(np.array(logs).shape)
-  # plt.figure()
-  # plt.imshow(np.array(logs), interpolation='nearest', aspect='auto', cmap="hot")
-  # plt.matshow(logs)
-  plt.matshow(logs, fignum=100, cmap=plt.cm.gray)
-  # plt.axes().set_xlim([500, 1000])
-  # plt.axes().set_aspect('equal')
-  plt.show()
+  plt.scatter(xs, ys, color='b', marker='o', s=5)
+
+  plt.xlabel('Time (s)')
+  plt.ylabel('Distance From Start of Road Segment')
+  plt.axes().set_axis_bgcolor('black')
+
+  ax.xaxis.label.set_color(white)
+  ax.yaxis.label.set_color(white)
+  ax.tick_params(axis='x', colors=white)
+  ax.tick_params(axis='y', colors=white)
+  ax.spines['bottom'].set_color(white)
+  ax.spines['top'].set_color(white)
+  ax.spines['left'].set_color(white)
+  ax.spines['right'].set_color(white)
+
+  plt.axes().set_xlim([0, max(xs) + 1])
+  plt.axes().set_ylim([0, max(ys) + 1])
+  plt.savefig('flow.png', transparent=True)
+  # plt.show()
 
 if __name__ == '__main__':
 
