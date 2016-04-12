@@ -9,7 +9,7 @@ from networkx.readwrite import json_graph
 from mapserver.util.timer import Timer
 
 class GraphBuilder(object):
-
+    
     __tags_to_copy = ['name', 'oneway', 'lanes', 'highway']
 
     def __init__(self, config, tier=None):
@@ -128,6 +128,9 @@ class GraphBuilder(object):
                 # append the path edge by edge for individual TTT estimates
                 nx_path = self.__current_item.path
                 for n1, n2 in zip(nx_path, nx_path[1:]):
+
+                    if 'Pisgah' not in props.get('name', '') and 'Lawndale' not in props.get('name', ''):
+                        break
 
                     # calculate the time to traverse
                     self.__calc_ttt(n1, n2, props)

@@ -388,8 +388,8 @@ class GraphContractor(object):
             v_priority = count
 
             # print progress
-            if count % int(self.num_nodes / 20) == 0:
-                self.__log.debug('%.4f%%' % ((count / self.num_nodes) * 100))
+            # if count % int(self.num_nodes / 20) == 0:
+            #     self.__log.debug('%.4f%%' % ((count / self.num_nodes) * 100))
 
             neighbors = set()
             count += 1

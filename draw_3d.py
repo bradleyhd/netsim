@@ -23,12 +23,12 @@ data_file_path = os.path.dirname(os.path.realpath(__file__)) + '/data/' + args.d
 
 # build the graph
 factory = GraphBuilder(config)
-graph, decision_graph = factory.from_file(data_file_path, True)
+graph = factory.from_file(data_file_path, False)
 
-# decision_graph = graph.copy()
+# graph = graph.copy()
 
 # contract the decision graph
-C = GraphContractor(config, decision_graph)
+C = GraphContractor(config, graph)
 C.order_nodes()
 C.contract_graph()
 C.set_flags()
@@ -38,8 +38,8 @@ priorities = {}
 colors = []
 count = 0
 
-# fig = plt.figure(num=None, figsize=(9, 12), dpi=300, facecolor='k', edgecolor='k')
-fig = plt.figure()
+fig = plt.figure(figsize=(12, 8), dpi=300)
+#fig = plt.figure()
 ax = fig.gca(projection='3d')
 
 blue = '#5738FF'
@@ -50,17 +50,17 @@ red = '#FF1E43'
 gray = '#333333'
 white = 'w'
 
-for node_1, node_2, data in decision_graph.edges(data = True):
+for node_1, node_2, data in graph.edges(data = True):
 
         # if 'real_arc' in data:
         #     #continue
 
-        x_1 = decision_graph.node[node_1]['lon']
-        y_1 = decision_graph.node[node_1]['lat']
-        x_2 = decision_graph.node[node_2]['lon']
-        y_2 = decision_graph.node[node_2]['lat']
-        z_1 = decision_graph.node[node_1]['priority']
-        z_2 = decision_graph.node[node_2]['priority']
+        x_1 = graph.node[node_1]['lon']
+        y_1 = graph.node[node_1]['lat']
+        x_2 = graph.node[node_2]['lon']
+        y_2 = graph.node[node_2]['lat']
+        z_1 = graph.node[node_1]['priority']
+        z_2 = graph.node[node_2]['priority']
         # z_1 = 1
         # z_2 = 1
 

@@ -40,8 +40,8 @@ white = 'w'
 
 graph(0, 'EDS5 - original graph', red, 'o', '--')
 graph(1, 'N5 - original graph', purple, 's', '--')
-graph(2, 'EDS5 - decision graph', green, 'o', '--')
-graph(3, 'N5 - decision graph', white, 's', '--')
+graph(2, 'EDS5 - decision graph', blue, '^', '--')
+graph(3, 'N5 - decision graph', white, 'D', '--')
 
 ax = fig.gca()
 plt.title('Effects of Node Ordering on Shortcut Edges Added', color=white)
